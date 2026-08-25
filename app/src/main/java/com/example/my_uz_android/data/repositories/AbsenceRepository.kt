@@ -11,7 +11,6 @@ class AbsenceRepository(private val absenceDao: AbsenceDao) {
 
     suspend fun insertAbsence(absence: AbsenceEntity) = absenceDao.insertAbsence(absence)
 
-    // ✅ DODANE: Metoda do zapisu listy nieobecności (wykorzystywana przy imporcie)
     suspend fun insertAbsences(absences: List<AbsenceEntity>) {
         absences.forEach { absenceDao.insertAbsence(it) }
     }

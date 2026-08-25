@@ -15,7 +15,6 @@ class GradesRepository(private val gradesDao: GradesDao) {
 
     suspend fun insertGrade(grade: GradeEntity) = gradesDao.insertGrade(grade)
 
-    // ✅ DODANE: Metoda do zapisu listy ocen (wykorzystywana przy imporcie)
     suspend fun insertGrades(grades: List<GradeEntity>) {
         grades.forEach { gradesDao.insertGrade(it) }
     }

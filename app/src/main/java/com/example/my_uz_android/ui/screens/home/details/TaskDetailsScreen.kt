@@ -3,6 +3,7 @@ package com.example.my_uz_android.ui.screens.home.details
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,6 +25,7 @@ import com.example.my_uz_android.ui.components.TopAppBar
 import com.example.my_uz_android.ui.components.TopBarActionIcon
 import com.example.my_uz_android.ui.theme.MyUZTheme
 import com.example.my_uz_android.ui.theme.getAppBackgroundColor
+import com.example.my_uz_android.ui.theme.taskPriorityDotColor
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.ui.res.stringResource
@@ -78,7 +81,7 @@ fun TaskDetailsScreen(
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    val isDark = isSystemInDarkTheme()
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val squareColor = getAppBackgroundColor(1, isDark) // 1 = ColorSetBlue
 
     Surface(
@@ -193,6 +196,22 @@ fun TaskDetailsScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .background(taskPriorityDotColor(task.priority), CircleShape)
+                                )
+                                Text(
+                                    text = stringResource(taskPriorityLabelResTaskDetails(task.priority)),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
@@ -201,7 +220,7 @@ fun TaskDetailsScreen(
                     DetailRowCard(
                         iconRes = R.drawable.ic_graduation_hat,
                         label = stringResource(R.string.label_subject_details),
-                        value = task.subjectName ?: ""
+                        value = formatSentenceCaseTaskDetails(task.subjectName ?: "")
                     )
                 }
 
@@ -218,7 +237,7 @@ fun TaskDetailsScreen(
                         DetailRowCard(
                             iconRes = R.drawable.ic_menu_2,
                             label = stringResource(R.string.label_description),
-                            value = it,
+                            value = formatSentenceCaseTaskDetails(it),
                             isMultiline = true
                         )
                     }
@@ -357,6 +376,21 @@ private fun formatDateTime(timestamp: Long): String {
     return SimpleDateFormat("EEEE, d MMMM yyyy, HH:mm", Locale.getDefault())
         .format(Date(timestamp))
         .replaceFirstChar { it.uppercase() }
+}
+
+private fun taskPriorityLabelResTaskDetails(priority: Int): Int {
+    return when (priority) {
+        0 -> R.string.priority_low
+        2 -> R.string.priority_high
+        else -> R.string.priority_medium
+    }
+}
+
+private fun formatSentenceCaseTaskDetails(value: String): String {
+    val trimmed = value.trim()
+    if (trimmed.isEmpty()) return trimmed
+    val lowercased = trimmed.lowercase(Locale.getDefault())
+    return lowercased.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 }
 
 @Preview(showBackground = true)

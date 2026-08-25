@@ -28,7 +28,6 @@ class UniversityRepositoryTest {
         every { Log.d(any(), any()) } returns 0
         every { Log.d(any(), any(), any()) } returns 0
 
-        // TUTAJ POPRAWKA: Odwrotna kolejność parametrów
         repository = UniversityRepository(postgrest, context)
     }
 

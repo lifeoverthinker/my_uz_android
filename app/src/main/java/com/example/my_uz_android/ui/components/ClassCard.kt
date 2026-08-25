@@ -1,15 +1,7 @@
 package com.example.my_uz_android.ui.components
 
-/**
- * Komponenty kart zajęć wykorzystywane w sekcjach Home i Kalendarz.
- * Plik definiuje wspólny model prezentacji dla pojedynczych zajęć wraz z wariantami
- * wizualnymi zależnymi od kontekstu ekranu.
- */
-
-import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,7 +43,10 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 
 /**
- * Określa wariant wizualny karty zajęć zależny od ekranu.
+ * Definiuje warianty wizualne komponentu karty zajęć.
+ * * Pozwala na ponowne wykorzystanie tego samego komponentu bazowego w różnych
+ * kontekstach architektonicznych interfejsu (np. pełny widok na Ekranie Głównym
+ * vs. minimalistyczny znacznik w Kalendarzu).
  */
 enum class ClassCardType {
     HOME,
@@ -59,34 +54,28 @@ enum class ClassCardType {
 }
 
 /**
- * Renderuje kartę pojedynczych zajęć z informacjami o czasie, sali i typie.
+ * Kompozywalny (Composable) element interfejsu reprezentujący kartę pojedynczych zajęć.
  *
- * @param classItem Dane zajęć wyświetlane na karcie.
- * @param type Wariant karty zależny od kontekstu ekranu.
- * @param backgroundColor Kolor tła karty.
- * @param accentColor Kolor akcentu dla badge lub markera.
- * @param showBadge Flaga określająca widoczność badge typu zajęć.
- * @param hasDeadlines Flaga określająca widoczność wskaźnika deadline'u.
- * @param isTeacherPlan Parametr kompatybilności dla kart planu prowadzącego.
- * @param onClick Akcja wykonywana po kliknięciu karty.
- * @param modifier Modyfikator układu Compose.
+ * Realizuje założenia zasady DRY (Don't Repeat Yourself), dostarczając zunifikowany
+ * i reużywalny komponent wizualny dla całej aplikacji. Automatycznie zarządza swoją
+ * prezentacją na podstawie przekazanego stanu (np. wygaszanie zajęć, które już się odbyły),
+ * jednak pozostaje komponentem w pełni bezstanowym (stateless) z perspektywy logiki biznesowej.
  */
 @Composable
 fun ClassCard(
     classItem: ClassEntity,
+    modifier: Modifier = Modifier,
     type: ClassCardType = ClassCardType.HOME,
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainer,
     accentColor: Color = MaterialTheme.colorScheme.primary,
     showBadge: Boolean = true,
     hasDeadlines: Boolean = false,
     isTeacherPlan: Boolean = false,
-    onClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onClick: () -> Unit = {}
 ) {
     val titleColor = MaterialTheme.colorScheme.onSurface
     val detailsColor = MaterialTheme.colorScheme.onSurfaceVariant
-    
-    // Dynamiczny kolor tekstu w kółku na podstawie jasności akcentu
+
     val avatarTextColor = if (accentColor.luminance() > 0.5f) Color(0xFF1D192B) else Color.White
 
     val isPast = remember(classItem) {
@@ -94,8 +83,7 @@ fun ClassCard(
             val datePart = LocalDate.parse(classItem.date)
             val timePart = LocalTime.parse(classItem.endTime)
             val classEndDateTime = LocalDateTime.of(datePart, timePart)
-            val currentDateTime = LocalDateTime.now()
-            classEndDateTime.isBefore(currentDateTime)
+            classEndDateTime.isBefore(LocalDateTime.now())
         } catch (e: Exception) {
             false
         }
@@ -106,11 +94,11 @@ fun ClassCard(
     Card(
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = modifier
             .fillMaxWidth()
             .alpha(contentAlpha)
-            .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier
@@ -169,7 +157,7 @@ fun ClassCard(
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = classItem.room ?: "",
+                                text = classItem.room,
                                 style = TextStyle(
                                     fontFamily = InterFontFamily,
                                     fontWeight = FontWeight.Normal,

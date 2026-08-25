@@ -73,6 +73,9 @@ class TaskAddEditViewModel(
         if (taskId != null && taskId != -1 && taskId != 0) {
             loadTask(taskId)
         } else {
+            val initialDate = savedStateHandle.get<Long>("dueDate")
+                ?: savedStateHandle.get<Long>("date")
+
             _uiState.update {
                 it.copy(
                     title = savedStateHandle.get<String>("title") ?: "",
@@ -83,8 +86,8 @@ class TaskAddEditViewModel(
                     classType = savedStateHandle.get<String>("type")
                         ?: savedStateHandle.get<String>("classType"),
                     isAllDay = savedStateHandle.get<Boolean>("isAllDay") ?: false,
-                    startDate = (savedStateHandle.get<Long>("dueDate")
-                        ?: savedStateHandle.get<Long>("date"))
+                    startDate = initialDate
+                        ?.takeIf { it > 0L }
                         ?.let { dateMillis ->
                             Instant.ofEpochMilli(dateMillis)
                                 .atZone(ZoneId.systemDefault())

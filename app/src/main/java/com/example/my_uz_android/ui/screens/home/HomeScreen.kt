@@ -268,8 +268,7 @@ fun HomeScreen(
                                                 task = task,
                                                 onTaskClick = { onTaskClick(task.id) },
                                                 modifier = Modifier.width(264.dp),
-                                                backgroundColor = getAppBackgroundColor(1, isDark),
-                                                isDarkMode = isDark
+                                                backgroundColor = getAppBackgroundColor(1, isDark)
                                             )
                                         }
                                     }

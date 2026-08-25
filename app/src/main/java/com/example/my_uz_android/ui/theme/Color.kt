@@ -7,6 +7,8 @@ package com.example.my_uz_android.ui.theme
  */
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import kotlin.math.abs
 
 // --- BAZA UŻYTKOWNIKA ---
@@ -203,3 +205,13 @@ fun getClassColorIndex(subjectName: String?, userColorMap: Map<String, Int> = em
     if (subjectName == null) return 0
     return userColorMap[subjectName] ?: (abs(subjectName.hashCode()) % AppColorPalette.size)
 }
+
+@Composable
+fun taskPriorityDotColor(priority: Int): Color {
+    return when (priority) {
+        2 -> MaterialTheme.colorScheme.error
+        1 -> Color(0xFFF57C00)
+        else -> Color(0xFF388E3C)
+    }
+}
+

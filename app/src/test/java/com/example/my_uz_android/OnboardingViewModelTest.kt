@@ -71,7 +71,6 @@ class OnboardingViewModelTest {
         coEvery { universityRepository.getGroupDetails(any()) } returns mockk<NetworkResult.Error<com.example.my_uz_android.data.repositories.GroupDetailsDto>>(relaxed = true)
 
         coEvery { settingsRepository.getSettingsStream() } returns flowOf(null)
-        // TUTAJ POPRAWKA: insertSettings zamiast saveSettings
         coEvery { settingsRepository.insertSettings(any<SettingsEntity>()) } just Runs
 
         viewModel.setUserName("Jan")
@@ -90,12 +89,11 @@ class OnboardingViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         val settingsSlot = slot<SettingsEntity>()
-        // TUTAJ POPRAWKA: insertSettings
         coVerify(exactly = 1) { settingsRepository.insertSettings(capture(settingsSlot)) }
 
         val savedEntity = settingsSlot.captured
         assertEquals("Jan Kowalski", savedEntity.userName)
-        assertEquals("Student", savedEntity.gender)
+        assertEquals(UserGender.STUDENT.name, savedEntity.gender)
         assertEquals("32INF-SP", savedEntity.selectedGroupCode)
         assertEquals("L1", savedEntity.selectedSubgroup)
         assertFalse("Flaga isAnonymous powinna być false przy pełnym zapisie", savedEntity.isAnonymous)

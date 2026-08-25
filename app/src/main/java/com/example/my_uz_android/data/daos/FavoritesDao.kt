@@ -13,7 +13,6 @@ interface FavoritesDao {
     @Query("SELECT * FROM favorites ORDER BY name ASC")
     fun getAllFavoritesStream(): Flow<List<FavoriteEntity>>
 
-    // ✅ FIX: Używamy nazwy kolumny "resource_id" w zapytaniu SQL
     @Query("SELECT EXISTS(SELECT 1 FROM favorites WHERE resource_id = :resourceId LIMIT 1)")
     suspend fun isFavorite(resourceId: String): Boolean
 
@@ -32,7 +31,6 @@ interface FavoritesDao {
     @Delete
     suspend fun deleteFavorite(favorite: FavoriteEntity)
 
-    // ✅ FIX: Używamy nazwy kolumny "resource_id"
     @Query("DELETE FROM favorites WHERE resource_id = :resourceId")
     suspend fun deleteByResourceId(resourceId: String)
 

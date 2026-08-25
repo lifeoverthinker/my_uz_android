@@ -20,7 +20,5 @@ class UserCourseRepository(private val userCourseDao: UserCourseDao) {
 
     suspend fun getUserCourseByCode(groupCode: String): UserCourseEntity? =
         userCourseDao.getUserCourseByCode(groupCode)
-
-    // Dodaj to przed ostatnią klamrą zamykającą klasę
     suspend fun deleteAll() = userCourseDao.deleteAll()
 }

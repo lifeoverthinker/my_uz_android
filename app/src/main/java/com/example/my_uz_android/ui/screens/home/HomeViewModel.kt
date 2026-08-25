@@ -1,12 +1,5 @@
 package com.example.my_uz_android.ui.screens.home
 
-/**
- * ViewModel zarządzający Ekranem Głównym (Pulpitem) aplikacji.
- * Odpowiada za serwowanie dzisiejszego planu zajęć, powitania studenta,
- * zadań na dziś oraz statystyk postępu semestru.
- * Obsługuje inteligentne łączenie głównego kierunku studiów (z Settings) z dodatkowymi (UserCourse).
- */
-
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -22,8 +15,8 @@ import com.example.my_uz_android.data.repositories.SettingsRepository
 import com.example.my_uz_android.data.repositories.TasksRepository
 import com.example.my_uz_android.data.repositories.UniversityRepository
 import com.example.my_uz_android.data.repositories.UserCourseRepository
-import com.example.my_uz_android.util.classesStillRemainingToday
 import com.example.my_uz_android.util.SubgroupMatcher
+import com.example.my_uz_android.util.classesStillRemainingToday
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Job
@@ -38,22 +31,24 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicBoolean
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import kotlin.math.abs
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Stan danych (Data Class) przekazywany do interfejsu ekranu Home.
+ * Model danych reprezentujący kompletny stan interfejsu (UI State) dla ekranu głównego.
+ *
+ * Klasa ta agreguje wszystkie informacje niezbędne do wyrenderowania pulpitu studenta,
+ * w tym spersonalizowane powitania, aktualny plan zajęć, listę nadchodzących zadań
+ * oraz wskaźniki postępu semestru. Hermetyzacja tych danych w jednym, niemutowalnym
+ * obiekcie gwarantuje spójność wyświetlanych informacji i ułatwia testowanie.
  */
 data class HomeUiState(
     val userName: String = "Student",
-    // 1. ZMIANA: Zamiast jednego Stringa, używamy listy stringów reprezentujących kierunki
     val studyFields: List<String> = emptyList(),
-    // Nowe pole: lista wydziałów do powitania
     val faculties: List<String> = emptyList(),
     val semester: Int? = null,
     val isLoading: Boolean = false,
@@ -67,10 +62,17 @@ data class HomeUiState(
     val daysLeftInSemester: Int = 0,
     val error: String? = null,
     val classColorMap: Map<String, Int> = emptyMap(),
-    // 2. ZMIANA: Flaga potrzebna, aby wymusić odświeżenie UI po Północy ("Klątwa Północy")
     val currentDateReference: LocalDate = LocalDate.now(ZoneId.of("Europe/Warsaw"))
 )
 
+/**
+ * Komponent warstwy prezentacji (ViewModel) zarządzający logiką ekranu głównego.
+ *
+ * Integruje strumienie danych z wielu repozytoriów, przetwarza je w oparciu o bieżący czas
+ * oraz preferencje użytkownika i eksponuje gotowy stan do warstwy widoku.
+ * Implementuje również mechanizm cyklicznego odświeżania czasu systemowego, zapobiegając
+ * dezaktualizacji widoków po zmianie dób.
+ */
 class HomeViewModel(
     application: Application,
     private val classRepository: ClassRepository,
@@ -85,18 +87,17 @@ class HomeViewModel(
     private val _isLoadingNetwork = MutableStateFlow(false)
     private val isRefreshInProgress = AtomicBoolean(false)
 
-    // 3. ZMIANA: Strumień "tikający" na bieżąco, wymuszający przeliczanie planu, jak wybije północ
     private val _currentTimeReference = MutableStateFlow(LocalDateTime.now(ZoneId.of("Europe/Warsaw")))
     private var timeTickerJob: Job? = null
 
-    // Rozpoczynamy "Zegarek", gdy ViewModel zostanie stworzony
     init {
         startTimeTicker()
     }
 
     /**
-     * Strumień serwujący połączony stan UI (Baza + Opcje) z wykorzystaniem combine.
-     * Dodaliśmy w arg[6] zmienną czasu, by "odtykała" Flow, kiedy zmienia się dzień.
+     * Strumień serwujący połączony i przetworzony stan UI.
+     * Wykorzystuje operator [combine] do nasłuchiwania zmian w bazie danych, ustawieniach
+     * oraz lokalnym czasie, gwarantując asynchroniczne i bezpieczne przygotowanie danych do wyświetlenia.
      */
     val uiState: StateFlow<HomeUiState> = combine(
         settingsRepository.getSettingsStream(),
@@ -105,7 +106,7 @@ class HomeViewModel(
         userCourseRepository.getAllUserCoursesStream(),
         eventRepository.getAllEventsStream(),
         _isLoadingNetwork,
-        _currentTimeReference // Reakcja na upływający czas!
+        _currentTimeReference
     ) { args: Array<Any?> ->
         try {
             val settings = args[0] as SettingsEntity?
@@ -119,7 +120,6 @@ class HomeViewModel(
             val today = nowReference.toLocalDate()
             val tomorrow = today.plusDays(1)
 
-            // Wyciągamy kolory z formatu JSON
             val colorMap = try {
                 val type = object : TypeToken<Map<String, Int>>() {}.type
                 gson.fromJson<Map<String, Int>>(settings?.classColorsJson ?: "{}", type) ?: emptyMap()
@@ -127,8 +127,6 @@ class HomeViewModel(
                 emptyMap()
             }
 
-
-            // --- 4.1: BUDOWANIE LISTY KIERUNKÓW (jak dotychczas)
             val allStudyFields = mutableListOf<String>()
             settings?.selectedGroupCode?.let { mainGroup ->
                 val fieldStr = if (!settings.fieldOfStudy.isNullOrBlank()) {
@@ -138,6 +136,7 @@ class HomeViewModel(
                 }
                 allStudyFields.add(fieldStr)
             }
+
             courses.forEach { course ->
                 val fieldStr = if (!course.fieldOfStudy.isNullOrBlank()) {
                     "${course.fieldOfStudy} (${course.groupCode})"
@@ -149,23 +148,19 @@ class HomeViewModel(
                 }
             }
 
-            // --- 4.2: BUDOWANIE LISTY WYDZIAŁÓW ---
             val facultiesSet = mutableSetOf<String>()
-            settings?.faculty?.let { if (!it.isNullOrBlank()) facultiesSet.add(it) }
+            settings?.faculty?.let { if (it.isNotBlank()) facultiesSet.add(it) }
             courses.forEach { course ->
-                course.faculty?.let { if (!it.isNullOrBlank()) facultiesSet.add(it) }
+                course.faculty?.let { if (it.isNotBlank()) facultiesSet.add(it) }
             }
             val facultiesList = facultiesSet.toList().sorted()
 
-            // Tworzymy gigantyczną listę wszystkich uprawnień (Enrollments) ze wszystkich dodanych kierunków.
-            // null z boku oznacza, że nie mamy tu wykluczających filtrów, więc algorytm założy "Bierz wszystko".
             val allUserCodesLower = mutableSetOf<String>()
             settings?.selectedGroupCode?.let { allUserCodesLower.add(it.trim().lowercase()) }
             courses.forEach { allUserCodesLower.add(it.groupCode.trim().lowercase()) }
 
             val userEnrollments = SubgroupMatcher.buildUserEnrollments(settings, courses, allUserCodesLower)
 
-            // Filtrujemy wszystkie klasy dla użytkownika. Mamy "wszystkie kierunki = włączone domyślnie"
             val visibleClasses = myClasses.filter { classItem ->
                 SubgroupMatcher.isClassVisible(
                     classItem.groupCode,
@@ -186,8 +181,10 @@ class HomeViewModel(
                 today = today,
                 nowTime = nowReference.toLocalTime()
             )
+
             val classesForTomorrow = finalVisibleClasses.filter { it.date == tomorrow.toString() }
             val upcomingTasks = tasks.filter { !it.isCompleted }.sortedBy { it.dueDate }
+
             val formatter = DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy", java.util.Locale("pl", "PL"))
             val todayStr = today.format(formatter).replaceFirstChar { it.uppercase() }
             val todaysEvents = events.filter { it.date == todayStr }
@@ -197,13 +194,12 @@ class HomeViewModel(
             val progress = (daysPassed / totalDays).coerceIn(0f, 1f)
             val left = ChronoUnit.DAYS.between(today, LocalDate.of(2025, 6, 20)).coerceAtLeast(0).toInt()
 
-            // 5. ZMIANA: Tymczasowe opóźnienie, by uniknąć migania "Pustego ekranu"
             val showLoading = settings == null
 
             HomeUiState(
                 userName = settings?.userName ?: "Student",
-                studyFields = allStudyFields, // Przekazujemy nową listę kierunków do UI!
-                faculties = facultiesList, // Przekazujemy listę wydziałów do UI!
+                studyFields = allStudyFields,
+                faculties = facultiesList,
                 semester = settings?.currentSemester,
                 isLoading = showLoading,
                 isRefreshing = isLoadingNet,
@@ -221,16 +217,19 @@ class HomeViewModel(
             Log.e("HomeVM", "Błąd generowania stanu UI", e)
             HomeUiState(error = e.localizedMessage, isLoading = false)
         }
-    }.catch { e -> Log.e("HomeVM", "Flow error", e) }
+    }
+        .catch { e -> Log.e("HomeVM", "Flow error", e) }
         .distinctUntilChanged()
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
-            HomeUiState(isLoading = true) // Ważne by startować z "true" - naprawa Migania
+            HomeUiState(isLoading = true)
         )
 
     /**
-     * Wymusza twardą synchronizację planu w tle, uderzając do API serwera.
+     * Wymusza synchronizację lokalnego harmonogramu z zewnętrznym API na podstawie zdefiniowanych
+     * przez studenta kierunków i grup.
+     * Wykorzystuje blokadę [AtomicBoolean], aby zapobiec nakładaniu się na siebie wielokrotnych żądań sieciowych.
      */
     fun refreshSchedule() {
         viewModelScope.launch {
@@ -247,12 +246,12 @@ class HomeViewModel(
                 if (groupCodes.isEmpty()) return@launch
 
                 _isLoadingNetwork.value = true
-                // Skrypt Supabase do odświeżania na podstawie danych UZ
+
                 groupCodes
                     .distinctBy { (code, subgroup) -> code.trim().lowercase() to subgroup?.trim()?.lowercase() }
                     .forEach { (code, subgroup) ->
-                    universityRepository.refreshSchedule(code, subgroup, classRepository)
-                }
+                        universityRepository.refreshSchedule(code, subgroup, classRepository)
+                    }
             } catch (e: Exception) {
                 Log.e("HomeVM", "Błąd odświeżania: ${e.message}")
             } finally {
@@ -263,18 +262,21 @@ class HomeViewModel(
     }
 
     /**
-     * Zegarek systemowy chroniący przed błędem "Klątwy Północy".
-     * Co minutę odświeża bieżący czas. Jeśli minie 00:00, Flow samoistnie przeliczy `today` i `tomorrow`
-     * bez konieczności restartowania aplikacji.
+     * Uruchamia mechanizm cyklicznej aktualizacji referencji czasu systemowego w tle.
+     * Gwarantuje prawidłowe przejście danych w widoku na nowy dzień o północy, automatycznie
+     * inicjując proces ponownego przeliczenia strumienia [uiState] bez ingerencji użytkownika.
      */
     private fun startTimeTicker() {
         timeTickerJob?.cancel()
         timeTickerJob = viewModelScope.launch {
             while (isActive) {
-                delay(60_000L) // Czekaj minutę
+                delay(60_000L)
                 val newTime = LocalDateTime.now(ZoneId.of("Europe/Warsaw"))
                 _currentTimeReference.value = newTime
             }
         }
     }
 }
+
+
+

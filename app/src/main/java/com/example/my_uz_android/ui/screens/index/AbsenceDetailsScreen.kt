@@ -202,8 +202,12 @@ fun AbsenceDetailsScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(4.dp))
+                            val formattedDate = remember(dateMillis) {
+                                SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault()).format(Date(dateMillis))
+                                    .replaceFirstChar { it.uppercase() }
+                            }
                             Text(
-                                text = formatAbsenceDetailsDate(dateMillis),
+                                text = formattedDate,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

@@ -164,10 +164,14 @@ class AddEditGradeViewModel(
     fun updateComment(comment: String) { _uiState.update { it.copy(comment = comment) } }
     fun updateDate(date: Long) { _uiState.update { it.copy(date = date) } }
 
+    // Zapisujemy nową lub edytowaną ocenę do bazy
     fun saveGrade() {
         viewModelScope.launch {
             val state = _uiState.value
             if (state.subjectName == null) return@launch
+
+            val currentSettings = settingsRepository.getSettingsStream().firstOrNull()
+            val semester = currentSettings?.currentSemester ?: currentSemesterFromSettings
 
             var finalGrade = 0.0
             var isPoints = false
@@ -175,7 +179,7 @@ class AddEditGradeViewModel(
 
             when (state.gradeType) {
                 GradeType.STANDARD -> {
-                    finalGrade = state.gradeValue ?: 5.0 // Dodatkowe zabezpieczenie
+                    finalGrade = state.gradeValue ?: 5.0
                     isPoints = false
                 }
                 GradeType.ACTIVITY -> {
@@ -194,7 +198,7 @@ class AddEditGradeViewModel(
                 }
             }
 
-            val idToSave = if (loadedGradeId != null && loadedGradeId != 0) loadedGradeId!! else 0
+            val idToSave = state.gradeId
 
             val entity = GradeEntity(
                 id = idToSave,
@@ -202,10 +206,10 @@ class AddEditGradeViewModel(
                 classType = state.classType ?: "",
                 grade = finalGrade,
                 weight = finalWeight,
-                description = state.description.ifBlank { if(isPoints) "Punkty" else "Ocena" },
+                description = state.description.ifBlank { if (isPoints) "Punkty" else "Ocena" },
                 comment = state.comment.ifBlank { null },
                 date = state.date,
-                semester = currentSemesterFromSettings,
+                semester = semester,
                 isPoints = isPoints
             )
 

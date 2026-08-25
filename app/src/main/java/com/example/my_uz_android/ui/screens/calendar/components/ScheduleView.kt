@@ -53,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -72,6 +73,7 @@ import com.example.my_uz_android.ui.theme.ClassColorPalette
 import com.example.my_uz_android.ui.theme.InterFontFamily
 import com.example.my_uz_android.ui.theme.getAppAccentColor
 import com.example.my_uz_android.ui.theme.getAppBackgroundColor
+import com.example.my_uz_android.ui.theme.taskPriorityDotColor
 import com.kizitonwose.calendar.compose.CalendarState
 import com.kizitonwose.calendar.compose.HorizontalCalendar
 import com.kizitonwose.calendar.compose.WeekCalendar
@@ -122,7 +124,7 @@ fun ScheduleView(
     tasks: List<TaskEntity>,
     classColorMap: Map<String, Int>,
     onClassClick: (ClassEntity) -> Unit,
-    isDarkMode: Boolean = isSystemInDarkTheme(),
+    isDarkMode: Boolean = MaterialTheme.colorScheme.surface.luminance() < 0.5f,
     isTeacherPlan: Boolean = false,
     availableDirections: List<String> = emptyList(),
     selectedDirections: Set<String> = emptySet(),
@@ -138,7 +140,6 @@ fun ScheduleView(
     }
 
     LaunchedEffect(selectedDate, classes) {
-        // Zielony komentarz: małe opóźnienie stabilizuje pomiar/scroll po zmianie dnia i recomposition.
         delay(InitialScrollDelayMsScheduleView)
 
         val isToday = selectedDate == LocalDate.now(PolandZone)
@@ -504,11 +505,7 @@ fun CalendarDay(
                     horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     tasksForDay.take(4).forEach { task ->
-                        val dotColor = when (task.priority) {
-                            2 -> MaterialTheme.colorScheme.error
-                            1 -> Color(0xFFF57C00)
-                            else -> Color(0xFF388E3C)
-                        }
+                        val dotColor = taskPriorityDotColor(task.priority)
 
                         Box(
                             modifier = Modifier

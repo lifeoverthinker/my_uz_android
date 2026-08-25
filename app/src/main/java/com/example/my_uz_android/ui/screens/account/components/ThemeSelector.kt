@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import com.example.my_uz_android.R
 import com.example.my_uz_android.data.models.ThemeMode
 
-/*** Zielony komentarz: Stałe UI wyciągnięte poza Composable, aby nie tworzyć ich ponownie przy każdej rekompozycji. */
 private val ThemeTileShape = RoundedCornerShape(12.dp)
 
 @Immutable
@@ -28,7 +27,6 @@ private data class ThemeTileColors(
     val border: androidx.compose.ui.graphics.Color
 )
 
-/*** Zielony komentarz: Mały helper centralizuje logikę kolorów i usuwa duplikację if-else. */
 @Composable
 private fun resolveThemeTileColors(isSelected: Boolean): ThemeTileColors {
     val scheme = MaterialTheme.colorScheme

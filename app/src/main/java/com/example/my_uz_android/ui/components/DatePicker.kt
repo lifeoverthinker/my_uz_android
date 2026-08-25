@@ -26,8 +26,10 @@ fun DatePicker(
     onDateSelected: (Long) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val safeInitialDateMillis = date?.takeIf { it > 0L } ?: System.currentTimeMillis()
+
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = date ?: System.currentTimeMillis()
+        initialSelectedDateMillis = safeInitialDateMillis
     )
 
     DatePickerDialog(

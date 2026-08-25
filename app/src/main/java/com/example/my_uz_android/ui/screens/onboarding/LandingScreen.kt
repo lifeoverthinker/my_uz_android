@@ -52,7 +52,7 @@ private fun getIllustrationResId(currentPage: Int): Int = when (currentPage) {
     else -> R.drawable.ic_user
 }
 
-@OptIn(ExperimentalAnimationApi::class)
+@OptIn(ExperimentalAnimationApi::class, ExperimentalLayoutApi::class)
 /**
  * Główny kontener procesu onboardingu z nawigacją między krokami.
  *
@@ -81,9 +81,7 @@ fun LandingScreen(
     val filteredExtraGroups by viewModel.filteredExtraGroups.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    val imeInsets = WindowInsets.ime
-    val density = LocalDensity.current
-    val isKeyboardVisible = remember(imeInsets) { imeInsets.getBottom(density) > 0 }
+    val isKeyboardVisible = WindowInsets.isImeVisible
 
     MyUZTheme {
         Scaffold(

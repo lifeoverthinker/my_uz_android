@@ -25,7 +25,6 @@ interface EventDao {
     @Delete
     suspend fun delete(event: EventEntity)
 
-    // ✅ DODANE: Usuwa wszystkie wydarzenia (wymagane do importu)
     @Query("DELETE FROM events")
     suspend fun deleteAll()
 }

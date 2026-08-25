@@ -719,8 +719,7 @@ fun SwipeToDismissItem(
                         shape = RoundedCornerShape(8.dp)
                     ),
                 onTaskClick = onTaskClick,
-                backgroundColor = cardColor,
-                isDarkMode = isDark
+                backgroundColor = cardColor
             )
         }
     }

@@ -22,6 +22,23 @@ class AppAlarmReceiver : BroadcastReceiver() {
         val pendingResult = goAsync() // Pozwala BroadcastReceiverowi na wykonanie zadań asynchronicznych (coroutines)
 
         val action = intent.action ?: run { pendingResult.finish(); return }
+
+        // Po restarcie telefonu przywracamy alarmy na nowo
+        if (action == Intent.ACTION_BOOT_COMPLETED) {
+            scope.launch {
+                try {
+                    val database = AppDatabase.getDatabase(context)
+                    val classes = database.classDao().getAllClasses().firstOrNull().orEmpty()
+                    NotificationHelper.scheduleClassAlarms(context, classes)
+                } catch (e: Exception) {
+                    Log.e("ALARM_TEST", "Błąd przywracania alarmów po restarcie", e)
+                } finally {
+                    pendingResult.finish()
+                }
+            }
+            return
+        }
+
         val id = intent.getIntExtra(EXTRA_ID, 0)
         val title = intent.getStringExtra(EXTRA_TITLE) ?: "MyUZ"
         val message = intent.getStringExtra(EXTRA_MESSAGE) ?: ""

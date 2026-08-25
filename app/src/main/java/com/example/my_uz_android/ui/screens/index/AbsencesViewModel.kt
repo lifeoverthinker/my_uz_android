@@ -236,18 +236,10 @@ class AbsencesViewModel(
             .filter { it in allUserCodes }
             .toSet()
 
-        return if (!isGroupsInitialized && allUserCodes.isNotEmpty()) {
-            _selectedGroups.value = allUserCodes
-            isGroupsInitialized = true
-            allUserCodes
+        return if (selectedNormalized.isNotEmpty()) {
+            selectedNormalized
         } else {
-            val source = if (selectedNormalized.isNotEmpty()) selectedNormalized else _selectedGroups.value
-            val normalizedSource = source
-                .map { normalizeGroupCodeAbsencesVm(it) }
-                .filter { it in allUserCodes }
-                .toSet()
-
-            if (normalizedSource.isNotEmpty()) normalizedSource else allUserCodes
+            allUserCodes
         }
     }
 

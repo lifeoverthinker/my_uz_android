@@ -6,16 +6,12 @@ import kotlinx.coroutines.flow.Flow
 
 class FavoritesRepository(private val favoritesDao: FavoritesDao) {
 
-    // Poprawiona nazwa: getAllFavoritesStream zamiast getAllFavorites
     val favoritesStream: Flow<List<FavoriteEntity>> = favoritesDao.getAllFavoritesStream()
 
-    // Poprawiona nazwa: insertFavorite zamiast insert
     suspend fun insertFavorite(favorite: FavoriteEntity) = favoritesDao.insertFavorite(favorite)
 
-    // Poprawiona nazwa: deleteFavorite zamiast delete
     suspend fun deleteFavorite(favorite: FavoriteEntity) = favoritesDao.deleteFavorite(favorite)
 
-    // Poprawiona metoda dopasowana do DAO (usuwanie po resourceId)
     suspend fun deleteFavoriteByResourceId(resourceId: String) =
         favoritesDao.deleteByResourceId(resourceId)
 

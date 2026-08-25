@@ -34,7 +34,6 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
     }
 
     override val universityRepository: UniversityRepository by lazy {
-        // ZMIANA: Dodano parametr 'context' wymagany do ustawiania alarmów!
         UniversityRepository(supabase.postgrest, context)
     }
 

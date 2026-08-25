@@ -346,12 +346,14 @@ private fun DetailSummaryItem(
     }
 }
 
+// Pojedynczy wiersz oceny na liście
 @Composable
 private fun GradeCardRow(grade: GradeEntity, onClick: () -> Unit) {
-    val dateStr = Instant.ofEpochMilli(grade.date)
-        .atZone(ZoneId.systemDefault())
-        .toLocalDate()
-        .format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("pl")))
+    val formatter = remember {
+        DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault())
+            .withZone(ZoneId.systemDefault())
+    }
+    val dateStr = formatter.format(Instant.ofEpochMilli(grade.date))
 
     val displayValue = when {
         grade.grade == -1.0 -> "+"

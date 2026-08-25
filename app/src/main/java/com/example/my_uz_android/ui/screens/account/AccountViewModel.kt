@@ -533,9 +533,12 @@ class AccountViewModel(
             _mainSelectedSubgroups.value = emptySet()
         }
 
+        kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+            classRepository.syncGroupClasses(course.groupCode, emptyList())
+        }
+
         _triggerSave.tryEmit(Unit)
     }
-
     fun updateAdditionalSubgroup(course: UserCourseEntity, subgroup: String) {
         isEditingProfile = true
 
@@ -586,33 +589,19 @@ class AccountViewModel(
         currentSettings = newSettings
         isEditingProfile = false
 
-        val fetchedClasses = mutableListOf<ClassEntity>()
+        kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+            newMainGroup?.let { groupCode ->
+                universityRepository.refreshSchedule(groupCode, mainSubgroups, classRepository)
+            }
 
-        newMainGroup?.let { groupCode ->
-            val subgroups = parseSubgroups(mainSubgroups).toList()
-            val res = universityRepository.getSchedule(groupCode, subgroups)
-            if (res is NetworkResult.Success) fetchedClasses.addAll(res.data ?: emptyList())
-        }
-
-        _additionalUserCourses.value.forEach { course ->
-            val subgroups = parseSubgroups(course.selectedSubgroup).toList()
-            val res = universityRepository.getSchedule(course.groupCode, subgroups)
-            if (res is NetworkResult.Success) fetchedClasses.addAll(res.data ?: emptyList())
-        }
-
-        classRepository.deleteAllClasses()
-        if (newMainGroup != null || _additionalUserCourses.value.isNotEmpty()) {
-            if (fetchedClasses.isNotEmpty()) {
-                classRepository.insertClasses(
-                    fetchedClasses.distinctBy { it.supabaseId ?: "${it.groupCode}_${it.subjectName}_${it.date}_${it.startTime}" }
-                )
+            _additionalUserCourses.value.forEach { course ->
+                universityRepository.refreshSchedule(course.groupCode, course.selectedSubgroup, classRepository)
             }
         }
 
         _isLoading.value = false
         showSavedFeedback()
     }
-
     private fun showSavedFeedback() = viewModelScope.launch {
         _isSavedFeedback.value = true
         delay(SAVED_FEEDBACK_MS)

@@ -5,11 +5,14 @@ import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
 /**
- * Encja reprezentująca pojedyncze zajęcia w planie zajęć.
- * * Niejawnie pełni funkcję nadrzędną dla [GradeEntity] oraz [TaskEntity] na podstawie
- * nazwy przedmiotu ([subjectName]) oraz typu zajęć ([classType]).
- * Należy uważać na spójność wielkości liter oraz białych znaków w polu [subjectName],
- * aby nie zerwać relacji z ocenami i zadaniami.
+ * Encja bazodanowa reprezentująca pojedyncze zajęcia w planie studenta.
+ *
+ * Klasa stanowi główne źródło prawdy (Single Source of Truth) o harmonogramie w lokalnej
+ * bazie danych SQLite oraz umożliwia synchronizację z zewnętrznym backendem dzięki serializacji.
+ * Niejawnie pełni funkcję nadrzędną dla encji ocen i zadań, wykorzystując do mapowania
+ * nazwę przedmiotu ([subjectName]) oraz typ zajęć ([classType]).
+ * * Uwaga architektoniczna: Należy dbać o spójność wielkości liter oraz białych znaków
+ * w polu [subjectName], aby zachować integralność logicznych relacji z ocenami i zadaniami.
  */
 @Serializable
 @Entity(tableName = "classes")
@@ -31,3 +34,4 @@ data class ClassEntity(
     val room: String? = null,
     val colorHex: String? = "#3D84FF"
 )
+

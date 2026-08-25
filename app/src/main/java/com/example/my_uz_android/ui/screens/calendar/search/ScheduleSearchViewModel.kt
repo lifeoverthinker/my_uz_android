@@ -224,6 +224,12 @@ class ScheduleSearchViewModel(
         return buildList {
             add(normalizedCode)
             add(compact)
+            // Dodajemy nazwy kierunków do indeksu wyszukiwania
+            group.studyFields.forEach { field ->
+                if (field.isNotBlank()) {
+                    add(field.trim())
+                }
+            }
         }.distinct()
     }
 

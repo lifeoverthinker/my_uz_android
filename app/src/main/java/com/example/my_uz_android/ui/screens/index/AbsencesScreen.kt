@@ -230,11 +230,13 @@ private fun ExpandableAbsenceCard(
                                 verticalArrangement = Arrangement.spacedBy(12.dp),
                                 horizontalAlignment = Alignment.Start,
                             ) {
+                                val formatter = remember {
+                                    DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
+                                        .withZone(ZoneId.systemDefault())
+                                }
+
                                 typeGroup.absences.forEach { absence ->
-                                    val dateStr =
-                                        DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
-                                            .withZone(ZoneId.systemDefault())
-                                            .format(Instant.ofEpochMilli(absence.date))
+                                    val dateStr = formatter.format(Instant.ofEpochMilli(absence.date))
 
                                     Row(
                                         modifier = Modifier

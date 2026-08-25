@@ -285,66 +285,65 @@ class OnboardingViewModel(
     fun saveOnboardingData(onSuccess: () -> Unit) {
         viewModelScope.launch {
             _isLoading.value = true
+            try {
+                var fetchedFaculty: String? = null
+                var fetchedFieldOfStudy: String? = null
+                var fetchedStudyMode: String? = null
 
-            var fetchedFaculty: String? = null
-            var fetchedFieldOfStudy: String? = null
-            var fetchedStudyMode: String? = null
-
-            val groupCode = _selectedGroup.value
-            if (!groupCode.isNullOrEmpty()) {
-                val detailsResult = universityRepository.getGroupDetails(groupCode)
-                if (detailsResult is NetworkResult.Success && detailsResult.data != null) {
-                    val details = detailsResult.data
-                    fetchedFaculty = details.fieldInfo?.faculty
-                    fetchedFieldOfStudy = details.fieldInfo?.name
-                    fetchedStudyMode = details.studyMode
-                }
-            }
-
-            val currentSettings = settingsRepository.getSettingsStream().firstOrNull()
-
-            val fullName = "${_userName.value.trim()} ${_userSurname.value.trim()}".trim()
-            val genderString = (_selectedGender.value ?: UserGender.STUDENT).name
-
-            val subgroupsString = _selectedSubgroups.value.joinToString(",")
-
-            // Zapis Głównego Kierunku i Personalizacji
-            val newSettings = SettingsEntity(
-                id = currentSettings?.id ?: 0,
-                userName = fullName,
-                isAnonymous = false,
-                selectedGroupCode = groupCode,
-                activeDirectionCode = groupCode,
-                selectedSubgroup = subgroupsString,
-                gender = genderString,
-                isFirstRun = false,
-                isDarkMode = currentSettings?.isDarkMode ?: false,
-                faculty = fetchedFaculty,
-                fieldOfStudy = fetchedFieldOfStudy,
-                studyMode = fetchedStudyMode
-            )
-            settingsRepository.insertSettings(newSettings)
-
-            // Zapis Dodatkowych Kierunków
-            _additionalCourses.value.forEach { (courseGroup, subgroups) ->
-                var extraField: String? = null
-                val detailsResult = universityRepository.getGroupDetails(courseGroup)
-                if (detailsResult is NetworkResult.Success && detailsResult.data != null) {
-                    extraField = detailsResult.data.fieldInfo?.name
+                val groupCode = _selectedGroup.value
+                if (!groupCode.isNullOrEmpty()) {
+                    val detailsResult = runCatching { universityRepository.getGroupDetails(groupCode) }.getOrNull()
+                    if (detailsResult is NetworkResult.Success && detailsResult.data != null) {
+                        val details = detailsResult.data
+                        fetchedFaculty = details.fieldInfo?.faculty
+                        fetchedFieldOfStudy = details.fieldInfo?.name
+                        fetchedStudyMode = details.studyMode
+                    }
                 }
 
-                userCourseRepository.insertUserCourse(
-                    UserCourseEntity(
-                        groupCode = courseGroup,
-                        fieldOfStudy = extraField,
-                        semester = currentSettings?.currentSemester ?: 1,
-                        selectedSubgroup = subgroups.joinToString(",")
-                    )
+                val currentSettings = settingsRepository.getSettingsStream().firstOrNull()
+                val fullName = "${_userName.value.trim()} ${_userSurname.value.trim()}".trim()
+                val genderString = (_selectedGender.value ?: UserGender.STUDENT).name
+                val subgroupsString = _selectedSubgroups.value.joinToString(",")
+
+                val newSettings = SettingsEntity(
+                    id = currentSettings?.id ?: 0,
+                    userName = fullName,
+                    isAnonymous = false,
+                    selectedGroupCode = groupCode,
+                    activeDirectionCode = groupCode,
+                    selectedSubgroup = subgroupsString,
+                    gender = genderString,
+                    isFirstRun = false,
+                    isDarkMode = currentSettings?.isDarkMode ?: false,
+                    faculty = fetchedFaculty,
+                    fieldOfStudy = fetchedFieldOfStudy,
+                    studyMode = fetchedStudyMode
                 )
-            }
+                settingsRepository.insertSettings(newSettings)
 
-            _isLoading.value = false
-            onSuccess()
+                _additionalCourses.value.forEach { (courseGroup, subgroups) ->
+                    var extraField: String? = null
+                    val detailsResult = runCatching { universityRepository.getGroupDetails(courseGroup) }.getOrNull()
+                    if (detailsResult is NetworkResult.Success && detailsResult.data != null) {
+                        extraField = detailsResult.data.fieldInfo?.name
+                    }
+
+                    userCourseRepository.insertUserCourse(
+                        UserCourseEntity(
+                            groupCode = courseGroup,
+                            fieldOfStudy = extraField,
+                            semester = currentSettings?.currentSemester ?: 1,
+                            selectedSubgroup = subgroups.joinToString(",")
+                        )
+                    )
+                }
+                onSuccess()
+            } catch (_: Exception) {
+                // Logowanie błędu
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }

@@ -169,10 +169,12 @@ class SettingsViewModel(
         }
     }
 
+    // Włączenie/wyłączenie powiadomień głównych
     fun toggleNotifications(enabled: Boolean) {
         updateSettings { it.copy(notificationsEnabled = enabled) }
     }
 
+    // Włączenie/wyłączenie przypomnień 15 minut przed zajęciami
     fun toggleClassesNotifications(enabled: Boolean) {
         updateSettings { it.copy(notificationsClasses = enabled) }
     }

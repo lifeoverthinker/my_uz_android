@@ -112,19 +112,7 @@ class GradesViewModel(
                 .filter { it in allUserCodes }
                 .toSet()
 
-            if (!isGroupsInitialized && allUserCodes.isNotEmpty()) {
-                _selectedGroups.value = allUserCodes
-                isGroupsInitialized = true
-                allUserCodes
-            } else {
-                val source = if (selectedNormalized.isNotEmpty()) selectedNormalized else _selectedGroups.value
-                val normalizedSource = source
-                    .map { normalizeGroupCode(it) }
-                    .filter { it in allUserCodes }
-                    .toSet()
-
-                if (normalizedSource.isNotEmpty()) normalizedSource else allUserCodes
-            }
+            if (selectedNormalized.isNotEmpty()) selectedNormalized else allUserCodes
         }
 
         // Sprawdzamy prawa dostępu (filtry i podgrupy) na poziomie całych list

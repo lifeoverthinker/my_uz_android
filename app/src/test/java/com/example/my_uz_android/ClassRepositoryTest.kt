@@ -53,7 +53,7 @@ class ClassRepositoryTest {
         val tomorrow = today.plusDays(1)
         val formatter = DateTimeFormatter.ofPattern("HH:mm")
 
-        val endedTime = if (now.toLocalTime().isAfter(LocalTime.MIDNIGHT)) {
+        val endedTime = if (now.toLocalTime() > LocalTime.of(0, 1)) {
             now.minusMinutes(1).toLocalTime().format(formatter)
         } else {
             "00:00"

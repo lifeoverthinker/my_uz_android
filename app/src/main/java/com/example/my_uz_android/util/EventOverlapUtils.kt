@@ -3,26 +3,20 @@ package com.example.my_uz_android.util
 import com.example.my_uz_android.data.models.ClassEntity
 import kotlin.math.max
 
+// Przechowuje pozycję kafelka: w której kolumnie ma być i na ile części dzielimy szerokość
 data class EventLayoutInfo(
     val classEntity: ClassEntity,
     val colIndex: Int,
     val totalCols: Int
 )
 
+// Oblicza układ kafelków na siatce, żeby nakładające się zajęcia nie zasłaniały się nawzajem
 fun calculateEventLayouts(classes: List<ClassEntity>): List<EventLayoutInfo> {
     if (classes.isEmpty()) return emptyList()
 
-    // Pomocnicza funkcja: "HH:mm" -> minuty od północy
-    fun timeToMins(time: String): Int {
-        val parts = time.split(":")
-        if (parts.size != 2) return 0
-        return parts[0].toInt() * 60 + parts[1].toInt()
-    }
-
-    // 1. Sortowanie: Najpierw te, co zaczynają się wcześniej.
-    // Jeśli startują tak samo, to najpierw dłuższe zajęcia.
-    val sorted = classes.sortedWith(
-        compareBy({ timeToMins(it.startTime) }, { -timeToMins(it.endTime) })
+    // Sortujemy po godzinie startu (a jak start ten sam, to dłuższe zajęcia pierwsze)
+    val sortedClasses = classes.sortedWith(
+        compareBy({ it.startTime.toMinutes() }, { -it.endTime.toMinutes() })
     )
 
     val result = mutableListOf<EventLayoutInfo>()
@@ -30,58 +24,75 @@ fun calculateEventLayouts(classes: List<ClassEntity>): List<EventLayoutInfo> {
     var currentCluster = mutableListOf<ClassEntity>()
     var clusterEnd = 0
 
-    // 2. Klastrowanie (grupowanie połączonych czasowo zajęć)
-    for (c in sorted) {
-        val start = timeToMins(c.startTime)
-        val end = timeToMins(c.endTime)
+    // 1. Zbieramy zajęcia w grupy (klastry), które na siebie nachodzą
+    for (classItem in sortedClasses) {
+        val start = classItem.startTime.toMinutes()
+        val end = classItem.endTime.toMinutes()
 
         if (currentCluster.isEmpty()) {
-            currentCluster.add(c)
+            currentCluster.add(classItem)
             clusterEnd = end
         } else {
-            if (start < clusterEnd) { // Overlap!
-                currentCluster.add(c)
+            if (start < clusterEnd) {
+                currentCluster.add(classItem)
                 clusterEnd = max(clusterEnd, end)
-            } else { // Brak nachodzenia, nowy klaster
+            } else {
                 clusters.add(currentCluster)
-                currentCluster = mutableListOf(c)
+                currentCluster = mutableListOf(classItem)
                 clusterEnd = end
             }
         }
     }
-    if (currentCluster.isNotEmpty()) clusters.add(currentCluster)
 
-    // 3. Przydział do kolumn w każdym klastrze (Zachłannie / Greedy)
+    if (currentCluster.isNotEmpty()) {
+        clusters.add(currentCluster)
+    }
+
+    // 2. W każdym klastrze przydzielamy zajęcia do kolejnych kolumn
     for (cluster in clusters) {
         val columns = mutableListOf<MutableList<ClassEntity>>()
-        val classToCol = mutableMapOf<ClassEntity, Int>()
+        val classToColumnMap = mutableMapOf<ClassEntity, Int>()
 
-        for (c in cluster) {
-            val start = timeToMins(c.startTime)
-            var placed = false
+        for (classItem in cluster) {
+            val start = classItem.startTime.toMinutes()
+            var isPlaced = false
 
-            // Szukamy pierwszej kolumny, w której ostatnie zajęcia skończyły się przed startem obecnych
+            // Szukamy kolumny, w której poprzednie zajęcia już się skończyły
             for (i in columns.indices) {
-                val lastEventEnd = timeToMins(columns[i].last().endTime)
+                val lastEventEnd = columns[i].last().endTime.toMinutes()
                 if (start >= lastEventEnd) {
-                    columns[i].add(c)
-                    classToCol[c] = i
-                    placed = true
+                    columns[i].add(classItem)
+                    classToColumnMap[classItem] = i
+                    isPlaced = true
                     break
                 }
             }
-            // Jeśli nie ma wolnej, tworzymy nową kolumnę
-            if (!placed) {
-                columns.add(mutableListOf(c))
-                classToCol[c] = columns.size - 1
+
+            // Jeśli wszystkie kolumny są zajęte, dodajemy nową kolumnę obok
+            if (!isPlaced) {
+                columns.add(mutableListOf(classItem))
+                classToColumnMap[classItem] = columns.size - 1
             }
         }
 
         val totalCols = columns.size
-        for (c in cluster) {
-            result.add(EventLayoutInfo(c, classToCol[c] ?: 0, totalCols))
+        for (classItem in cluster) {
+            result.add(
+                EventLayoutInfo(
+                    classEntity = classItem,
+                    colIndex = classToColumnMap[classItem] ?: 0,
+                    totalCols = totalCols
+                )
+            )
         }
     }
 
     return result
+}
+
+// Zamienia "08:30" na minuty od północy (np. 510) do łatwego porównywania
+private fun String.toMinutes(): Int {
+    val parts = this.split(":")
+    if (parts.size != 2) return 0
+    return (parts[0].toIntOrNull() ?: 0) * 60 + (parts[1].toIntOrNull() ?: 0)
 }

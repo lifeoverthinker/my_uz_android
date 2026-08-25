@@ -56,13 +56,7 @@ fun ScheduleSearchScreen(
         onQueryChange = searchViewModel::onQueryChange,
         onBackClick = { navController.popBackStack() },
         onItemClick = { item ->
-            calendarViewModel.selectFavoritePlan(
-                FavoriteEntity(
-                    name = item.name,
-                    type = item.type,
-                    resourceId = item.name
-                )
-            )
+            calendarViewModel.selectPreviewPlan(item.name, item.type)
             navController.navigate("schedule_preview")
         },
         onFavoriteClick = { calendarViewModel.toggleFavorite(it.name, it.type) }

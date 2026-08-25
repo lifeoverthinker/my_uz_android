@@ -79,7 +79,7 @@ object ClassTypeUtils {
         return map[abbreviation] ?: abbreviation
     }
 
-    // ✅ ZMODYFIKOWANA FUNKCJA: Zwraca kolor na podstawie nazwy typu zajęć ORAZ mapy ustawień
+    // Zwraca kolor dla typu zajęć z ustawień lub domyślny
     fun getClassTypeColor(
         classType: String?,
         colors: List<Color>,

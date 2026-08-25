@@ -13,7 +13,6 @@ interface AbsenceDao {
     @Query("SELECT * FROM absences ORDER BY date DESC")
     fun getAllAbsences(): Flow<List<AbsenceEntity>>
 
-    // ✅ DODANE: Pobieranie konkretnej nieobecności po ID
     @Query("SELECT * FROM absences WHERE id = :id")
     fun getAbsenceById(id: Int): Flow<AbsenceEntity?>
 

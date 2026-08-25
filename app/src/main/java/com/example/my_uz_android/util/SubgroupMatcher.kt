@@ -3,74 +3,44 @@ package com.example.my_uz_android.util
 import com.example.my_uz_android.data.models.SettingsEntity
 import com.example.my_uz_android.data.models.UserCourseEntity
 
-/**
- * Zielony komentarz:
- * Wspólny matcher podgrup dla całej appki (kalendarz + indeks).
- * Dzięki temu unikamy sytuacji, że jeden ekran pokazuje zajęcia, a drugi je gubi.
- */
+// Pomocnik do sprawdzania, czy zajęcia pasują do podgrupy studenta (np. Lab 1, Ćw 2)
 object SubgroupMatcher {
 
-    private val COMMON_TOKENS = setOf("all", "-", "brak", "w", "wyk")
+    // Znaczniki oznaczające, że zajęcia są dla całego roku/grupy
+    private val COMMON_TOKENS = setOf("all", "-", "brak", "w", "wyk", "wyklad", "wykład", "sem", "seminarium")
 
-    fun isCommonClassSubgroup(raw: String?): Boolean {
-        val tokens = tokenizeCsv(raw)
-        if (tokens.isEmpty()) return true
-        return tokens.any { it in COMMON_TOKENS }
-    }
+    // Główna funkcja sprawdzająca podgrupy (używana w testach i w AbsencesViewModel)
+    fun matchesSubgroups(classSubgroupRaw: String?, selectedSubgroupsRaw: List<String?>): Boolean {
+        val classTokens = classSubgroupRaw?.split(Regex("[,;/|\\s]+"))
+            ?.map { it.trim().lowercase() }
+            ?.filter { it.isNotBlank() }
+            ?: emptyList()
 
-    fun matchesSubgroups(classSubgroupRaw: String?, allowedSubgroupsRaw: List<String?>): Boolean {
-        val classTokens = tokenizeCsv(classSubgroupRaw)
-        val allowedTokens = allowedSubgroupsRaw.flatMap { tokenizeCsv(it) }.toSet()
-
-        // 1) Brak podgrupy w zajeciach -> zajecia dla calego kierunku/roku
+        // Brak podgrupy lub wykład -> widoczne dla każdego
         if (classTokens.isEmpty()) return true
-
-        // 2) Znaczniki zajec ogolnych
         if (classTokens.any { it in COMMON_TOKENS }) return true
 
-        // 3) Brak filtrowania po stronie usera -> pokaz wszystko
+        val allowedTokens = selectedSubgroupsRaw.mapNotNull { it?.trim()?.lowercase() }
+            .flatMap { it.split(Regex("[,;/|\\s]+")) }
+            .filter { it.isNotBlank() }
+
+        // Jeśli student nic nie wybrał, widzi wszystko
         if (allowedTokens.isEmpty()) return true
 
-        // 4) Najwazniejsze: czesc wspolna zbiorow
-        return classTokens.any { it in allowedTokens }
+        // Sprawdzamy czy podgrupa zajęć pokrywa się z wybraną przez studenta
+        return classTokens.any { classToken ->
+            allowedTokens.any { allowedToken ->
+                classToken == allowedToken || classToken.contains(allowedToken)
+            }
+        }
     }
 
+    // Alias dla wstecznej kompatybilności (gdyby inne pliki wołały matches)
     fun matches(classSubgroupRaw: String?, selectedSubgroupsRaw: List<String?>): Boolean {
         return matchesSubgroups(classSubgroupRaw, selectedSubgroupsRaw)
     }
 
-    fun tokenize(raw: String?): List<String> {
-        val normalized = normalize(raw)
-        if (normalized.isBlank()) return emptyList()
-
-        return normalized
-            .split(Regex("[,;/|\\s]+"))
-            .map { alias(it.trim()) }
-            .filter { it.isNotBlank() }
-    }
-
-    private fun tokenizeCsv(raw: String?): List<String> {
-        return raw
-            ?.split(Regex("[,;/|\\s]+"))
-            ?.map { alias(it.trim().lowercase()) }
-            ?.filter { it.isNotBlank() }
-            ?: emptyList()
-    }
-
-    private fun normalize(raw: String?): String = raw?.trim()?.lowercase().orEmpty()
-
-    private fun alias(token: String): String {
-        return when (token) {
-            "wyklad", "wykład", "wyk", "w" -> "wyk"
-            "seminarium", "sem" -> "sem"
-            else -> token
-        }
-    }
-
-    // ==========================================
-    // PANCERNA REGUŁA FILTROWANIA (ZINTEGROWANA)
-    // ==========================================
-
+    // Tworzy mapę: "kod_grupy" -> ["lab 1", "ćw 2"] dla wszystkich kierunków studenta
     fun buildUserEnrollments(
         settings: SettingsEntity?,
         courses: List<UserCourseEntity>,
@@ -81,20 +51,25 @@ object SubgroupMatcher {
         fun addEnrollment(groupCode: String?, subgroupRaw: String?) {
             val code = groupCode?.trim()?.lowercase() ?: return
             if (code.isBlank()) return
-            if (activeGroupCodesLower != null && code !in activeGroupCodesLower) return
 
-            if (!enrollments.containsKey(code)) enrollments[code] = mutableListOf()
+            if (activeGroupCodesLower != null && !activeGroupCodesLower.contains(code)) return
 
-            val tokens = tokenizeCsv(subgroupRaw)
-            if (tokens.isNotEmpty()) enrollments[code]!!.addAll(tokens)
+            val tokens = subgroupRaw?.split(Regex("[,;/|\\s]+"))
+                ?.map { it.trim().lowercase() }
+                ?.filter { it.isNotBlank() }
+                ?: emptyList()
+
+            val currentList = enrollments.getOrPut(code) { mutableListOf() }
+            currentList.addAll(tokens)
         }
 
-        settings?.selectedGroupCode?.let { addEnrollment(it, settings.selectedSubgroup) }
+        addEnrollment(settings?.selectedGroupCode, settings?.selectedSubgroup)
         courses.forEach { addEnrollment(it.groupCode, it.selectedSubgroup) }
 
         return enrollments
     }
 
+    // Decyduje, czy dany kafelek zajęć ma się pokazać w Kalendarzu i na Ekranie Głównym
     fun isClassVisible(
         classGroupCode: String?,
         classType: String?,
@@ -102,20 +77,34 @@ object SubgroupMatcher {
         userEnrollments: Map<String, List<String>>
     ): Boolean {
         val code = classGroupCode?.trim()?.lowercase() ?: return false
+
         if (!userEnrollments.containsKey(code)) return false
 
         val userSubgroups = userEnrollments[code] ?: emptyList()
 
-        // a) Rozszerzone sprawdzanie typu zajęć (Wykłady, Seminaria, Egzaminy są dla całej grupy)
-        val fullTypeName = ClassTypeUtils.getFullName(classType?.trim()).lowercase()
-        val isCommonType = fullTypeName.contains("wykład") ||
-                fullTypeName.contains("seminarium") ||
-                fullTypeName.contains("egzamin") ||
-                fullTypeName.contains("samokształcenie")
+        if (userSubgroups.isEmpty()) return true
 
-        if (isCommonType) return true
+        val classTokens = classSubgroup?.split(Regex("[,;/|\\s]+"))
+            ?.map { it.trim().lowercase() }
+            ?.filter { it.isNotBlank() }
+            ?: emptyList()
 
-        // b/c/d) Regula intersection + warunki brzegowe podgrup
-        return matchesSubgroups(classSubgroup, userSubgroups)
+        if (classTokens.isEmpty()) return true
+
+        if (classTokens.any { it in COMMON_TOKENS }) return true
+
+        // Wykłady, seminaria i egzaminy pokazujemy zawsze całemu kierunkowi
+        val typeName = classType?.trim()?.lowercase() ?: ""
+        if (typeName.contains("wykład") || typeName.contains("wyklad") ||
+            typeName.contains("sem") || typeName.contains("egzamin") ||
+            typeName.contains("samokształcenie")) {
+            return true
+        }
+
+        return classTokens.any { classToken ->
+            userSubgroups.any { userToken ->
+                classToken == userToken || classToken.contains(userToken)
+            }
+        }
     }
 }

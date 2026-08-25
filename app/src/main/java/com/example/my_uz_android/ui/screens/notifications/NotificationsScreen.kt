@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -43,20 +44,16 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
+// Główny widok powiadomień
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-        /**
-         * Renderuje ekran powiadomień z akcją czyszczenia listy.
-         *
-         * @param viewModel ViewModel odpowiedzialny za dane powiadomień.
-         * @param onNavigateBack Callback powrotu do poprzedniego ekranu.
-         */
 fun NotificationsScreen(
     viewModel: NotificationsViewModel,
     onNavigateBack: () -> Unit
 ) {
-    val notifications by viewModel.notifications.collectAsState(initial = emptyList())
+    val notifications by viewModel.notifications.collectAsStateWithLifecycle(initialValue = emptyList())
 
     LaunchedEffect(Unit) {
         viewModel.markAllAsRead()
@@ -108,14 +105,9 @@ fun NotificationsScreen(
     }
 }
 
+// Pojedyncze powiadomienie z możliwością usunięcia swipem w lewo
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-        /**
-         * Renderuje element listy powiadomień z obsługą usuwania gestem swipe.
-         *
-         * @param notification Powiadomienie prezentowane na liście.
-         * @param onDelete Callback usuwający wskazane powiadomienie.
-         */
 fun SwipeToDeleteNotification(
     notification: NotificationEntity,
     onDelete: () -> Unit
@@ -164,21 +156,16 @@ fun SwipeToDeleteNotification(
     )
 }
 
+// Karta powiadomienia z ikonką, datą i treścią
 @Composable
-        /**
-         * Renderuje kartę pojedynczego powiadomienia.
-         *
-         * @param notification Dane powiadomienia do wyświetlenia.
-         * @param backgroundColor Opcjonalny kolor tła karty.
-         * @param isDarkMode Flaga trybu ciemnego używana przy doborze palety.
-         */
 fun NotificationCardItem(
     notification: NotificationEntity,
     backgroundColor: Color? = null,
-    isDarkMode: Boolean = isSystemInDarkTheme()
+    isDarkMode: Boolean = MaterialTheme.colorScheme.surface.luminance() < 0.5f
 ) {
-    val dateFormatter = SimpleDateFormat("dd.MM.yyyy, HH:mm", Locale.getDefault())
-    val formattedDate = dateFormatter.format(Date(notification.timestamp))
+    val formattedDate = remember(notification.timestamp) {
+        SimpleDateFormat("dd.MM.yyyy, HH:mm", Locale.getDefault()).format(Date(notification.timestamp))
+    }
 
     // Indeks 0 dla powiadomień (fioletowy zestaw spójny z resztą apki)
     val bgColor = backgroundColor ?: getAppBackgroundColor(0, isDarkMode)

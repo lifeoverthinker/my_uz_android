@@ -191,7 +191,7 @@ class AddEditAbsenceViewModel(
             if (state.subjectName == null) return@launch
 
             val entity = AbsenceEntity(
-                id = loadedAbsenceId ?: 0,
+                id = state.id,
                 subjectName = state.subjectName,
                 classType = state.classType ?: "",
                 date = state.date,
@@ -204,15 +204,17 @@ class AddEditAbsenceViewModel(
         }
     }
 
+    // Usuwamy obecną nieobecność z bazy
     fun deleteAbsence() {
         viewModelScope.launch {
             val state = _uiState.value
-            if (loadedAbsenceId != null && loadedAbsenceId != 0) {
+            if (state.id != 0) {
                 val entity = AbsenceEntity(
-                    id = loadedAbsenceId!!,
+                    id = state.id,
                     subjectName = state.subjectName ?: "",
                     date = state.date,
                     classType = state.classType ?: "",
+                    description = state.description.ifBlank { null },
                     isExcused = state.isExcused
                 )
                 absenceRepository.deleteAbsence(entity)

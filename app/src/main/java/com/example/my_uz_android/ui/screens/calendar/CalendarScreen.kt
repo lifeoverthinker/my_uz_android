@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -175,8 +176,11 @@ fun CalendarScreenContent(
         }
     }
 
-    // NAPRAWA: Niezawodny miesiąc. Po prostu wskazuje na to, co jest w wybranej dacie. Zawsze!
-    val visibleMonth = remember(selectedDate) { YearMonth.from(selectedDate) }
+    val visibleMonth = if (isMonthView) {
+        monthState.firstVisibleMonth.yearMonth
+    } else {
+        weekState.firstVisibleWeek.days.firstOrNull()?.date?.let { YearMonth.from(it) } ?: YearMonth.from(selectedDate)
+    }
 
     val currentLocale = Locale.getDefault()
     val monthName = visibleMonth.month
@@ -189,7 +193,7 @@ fun CalendarScreenContent(
     val isDark = when (uiState.themeMode) {
         "DARK" -> true
         "LIGHT" -> false
-        else -> isSystemInDarkTheme()
+        else -> MaterialTheme.colorScheme.surface.luminance() < 0.5f
     }
 
     Scaffold(

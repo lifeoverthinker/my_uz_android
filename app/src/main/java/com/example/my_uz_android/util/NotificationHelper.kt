@@ -82,6 +82,7 @@ object NotificationHelper {
         Log.d("ALARM_TEST", "Powiadomienie zostało wypchnięte do systemu: ID=$notificationId")
     }
 
+    // Ustawia dokładny alarm budzący telefon z Doze Mode
     fun scheduleExactAlarm(
         context: Context,
         timeInMillis: Long,
@@ -93,18 +94,24 @@ object NotificationHelper {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val pendingIntent = createAlarmPendingIntent(context, id, title, message, isTask)
 
-        try {
-            // Bezpośrednio wymuszamy dokładny alarm z wybudzaniem (Doze mode)
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                timeInMillis,
-                pendingIntent
-            )
-            Log.d("ALARM_TEST", "USTAWIONO ALARM: na $timeInMillis (obecnie jest ${System.currentTimeMillis()}), Tytuł: $title")
-        } catch (e: SecurityException) {
-            Log.e("ALARM_TEST", "BŁĄD: System zablokował dokładny alarm! Brak uprawnień USE_EXACT_ALARM", e)
-            // Fallback
-            alarmManager.set(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
+        val canScheduleExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            alarmManager.canScheduleExactAlarms()
+        } else {
+            true
+        }
+
+        if (canScheduleExact) {
+            try {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    timeInMillis,
+                    pendingIntent
+                )
+            } catch (e: SecurityException) {
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
+            }
+        } else {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
         }
     }
 
@@ -132,6 +139,7 @@ object NotificationHelper {
         )
     }
 
+    // Planuje przypomnienia 15 min przed każdym zajęciem na najbliższy tydzień
     fun scheduleClassAlarms(context: Context, classes: List<ClassEntity>) {
         val now = LocalDateTime.now()
         val limitDate = now.plusDays(7)
@@ -148,10 +156,13 @@ object NotificationHelper {
                 if (notificationTime.isAfter(now) && notificationTime.isBefore(limitDate)) {
                     val timeInMillis = notificationTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
+                    // Generujemy unikalne ID na podstawie ID zajęć i daty, żeby alarmy się nie nadpisywały
+                    val uniqueAlarmId = (classItem.id.toString() + classItem.date + classItem.startTime).hashCode()
+
                     scheduleExactAlarm(
                         context = context,
                         timeInMillis = timeInMillis,
-                        id = classItem.id.hashCode(), // HASH użyty jako unikalne ID, by uniknąć kolizji
+                        id = uniqueAlarmId,
                         title = "Zajęcia za 15 minut!",
                         message = "${classItem.subjectName} · sala ${classItem.room}",
                         isTask = false

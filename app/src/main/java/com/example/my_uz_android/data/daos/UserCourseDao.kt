@@ -30,8 +30,6 @@ interface UserCourseDao {
     // Sprawdza, czy już mamy ten kierunek w bazie
     @Query("SELECT * FROM user_courses WHERE groupCode = :groupCode LIMIT 1")
     suspend fun getUserCourseByCode(groupCode: String): UserCourseEntity?
-
-    // Dodaj to przed ostatnią klamrą zamykającą interface
     @Query("DELETE FROM user_courses")
     suspend fun deleteAll()
 }
