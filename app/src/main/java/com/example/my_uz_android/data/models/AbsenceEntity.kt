@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
+// Wpis o nieobecności na zajęciach
 @Serializable
 @Entity(tableName = "absences")
 data class AbsenceEntity(

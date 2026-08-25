@@ -1,11 +1,5 @@
 package com.example.my_uz_android.ui.components
 
-/**
- * Komponent prezentujący skrócone informacje o wydarzeniu w postaci karty.
- * Używany jest w sekcjach dashboardu i listach wydarzeń jako lekki element
- * nawigujący do szczegółów.
- */
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,14 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.example.my_uz_android.data.models.EventEntity
 import com.example.my_uz_android.ui.theme.extendedColors
 
-/**
- * Komponent wyświetlający pojedyncze wydarzenie w formie karty.
- *
- * @param event Obiekt [EventEntity] zawierający dane wydarzenia do wyświetlenia.
- * @param onClick Akcja wywoływana po kliknięciu w kartę.
- * @param modifier Modyfikator układu dla karty.
- * @param backgroundColor Opcjonalny kolor tła karty.
- */
+// Karta pojedynczego wydarzenia na dashboardzie i liście
 @Composable
 fun EventCard(
     event: EventEntity,

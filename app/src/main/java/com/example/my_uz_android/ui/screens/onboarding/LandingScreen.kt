@@ -1,11 +1,5 @@
 package com.example.my_uz_android.ui.screens.onboarding
 
-/**
- * Ekran onboardingu prowadzący użytkownika przez konfigurację profilu i planu.
- * Zawiera kroki formularzowe oraz kroki informacyjne, a po zakończeniu zapisuje
- * ustawienia startowe używane w dalszym działaniu aplikacji.
- */
-
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -25,7 +19,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -40,6 +33,7 @@ import com.example.my_uz_android.ui.AppViewModelProvider
 import com.example.my_uz_android.ui.theme.MyUZTheme
 import kotlin.math.abs
 
+// Obrazki do poszczególnych kroków onboardingu
 @Composable
 private fun getIllustrationResId(currentPage: Int): Int = when (currentPage) {
     0 -> R.drawable.college_students_rafiki
@@ -52,15 +46,8 @@ private fun getIllustrationResId(currentPage: Int): Int = when (currentPage) {
     else -> R.drawable.ic_user
 }
 
+// Główny ekran powitalny / onboarding
 @OptIn(ExperimentalAnimationApi::class, ExperimentalLayoutApi::class)
-/**
- * Główny kontener procesu onboardingu z nawigacją między krokami.
- *
- * @param viewModel ViewModel zarządzający stanem i zapisem konfiguracji.
- * @param onNavigateToOnboarding Callback zgodnościowy dla nawigacji do onboardingu.
- * @param onNavigateToHome Callback nawigacji do ekranu głównego.
- * @param onFinishOnboarding Callback wywoływany po zakończeniu onboardingu.
- */
 @Composable
 fun LandingScreen(
     viewModel: OnboardingViewModel = viewModel(factory = AppViewModelProvider.Factory),
@@ -73,15 +60,7 @@ fun LandingScreen(
     val selectedGender by viewModel.selectedGender.collectAsState()
     val userName by viewModel.userName.collectAsState()
     val totalPages = viewModel.totalPages
-    val extraGroupSearchQuery by viewModel.extraGroupSearchQuery.collectAsState()
-    val selectedExtraGroup by viewModel.selectedExtraGroup.collectAsState()
-    val availableExtraSubgroups by viewModel.availableExtraSubgroups.collectAsState()
-    val selectedExtraSubgroups by viewModel.selectedExtraSubgroups.collectAsState()
-    val additionalCourses by viewModel.additionalCourses.collectAsState()
-    val filteredExtraGroups by viewModel.filteredExtraGroups.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-
-    val isKeyboardVisible = WindowInsets.isImeVisible
 
     MyUZTheme {
         Scaffold(
@@ -90,6 +69,7 @@ fun LandingScreen(
                 .imePadding(),
             containerColor = MaterialTheme.colorScheme.surface,
             topBar = {
+                // Przycisk "Pomiń" w prawym górnym rogu
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -105,7 +85,7 @@ fun LandingScreen(
                             enabled = !isLoading
                         ) {
                             Text(
-                                stringResource(R.string.onboarding_skip),
+                                text = stringResource(R.string.onboarding_skip),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -114,131 +94,129 @@ fun LandingScreen(
                 }
             },
             bottomBar = {
-                if (!isKeyboardVisible) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp)
-                            .padding(bottom = 16.dp)
-                            .navigationBarsPadding(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        PageIndicators(totalPages = totalPages, currentPage = currentPage)
-                        Spacer(Modifier.height(24.dp))
+                // Dolny pasek z kropkami i przyciskami dalej/wstecz
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 16.dp)
+                        .navigationBarsPadding(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    PageIndicators(totalPages = totalPages, currentPage = currentPage)
+                    Spacer(Modifier.height(20.dp))
 
-                        Box(modifier = Modifier.fillMaxWidth()) {
-                            when (currentPage) {
-                                0 -> {
-                                    Button(
-                                        onClick = { viewModel.onNextClick() },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(48.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.primary,
-                                            contentColor = MaterialTheme.colorScheme.onPrimary
-                                        )
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        when (currentPage) {
+                            0 -> {
+                                Button(
+                                    onClick = { viewModel.onNextClick() },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                ) {
+                                    Text(stringResource(R.string.onboarding_start), style = MaterialTheme.typography.labelLarge)
+                                    Spacer(Modifier.width(8.dp))
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_chevron_right),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            totalPages - 1 -> {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    FilledTonalButton(
+                                        onClick = { viewModel.onBackClick() },
+                                        modifier = Modifier.weight(1f).height(48.dp),
+                                        enabled = !isLoading
                                     ) {
-                                        Text(stringResource(R.string.onboarding_start), style = MaterialTheme.typography.labelLarge)
+                                        Icon(painterResource(R.drawable.ic_chevron_left), null, Modifier.size(20.dp))
                                         Spacer(Modifier.width(8.dp))
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_chevron_right),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(20.dp)
-                                        )
+                                        Text(stringResource(R.string.onboarding_back))
                                     }
-                                }
-                                totalPages - 1 -> {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    Button(
+                                        onClick = {
+                                            viewModel.saveOnboardingData { onFinishOnboarding() }
+                                        },
+                                        modifier = Modifier.weight(1f).height(48.dp),
+                                        enabled = !isLoading
                                     ) {
-                                        FilledTonalButton(
-                                            onClick = { viewModel.onBackClick() },
-                                            modifier = Modifier.weight(1f).height(48.dp),
-                                            enabled = !isLoading
-                                        ) {
-                                            Icon(painterResource(R.drawable.ic_chevron_left), null, Modifier.size(20.dp))
-                                            Spacer(Modifier.width(8.dp))
-                                            Text(stringResource(R.string.onboarding_back))
-                                        }
-                                        Button(
-                                            onClick = {
-                                                viewModel.saveOnboardingData { onFinishOnboarding() }
-                                            },
-                                            modifier = Modifier.weight(1f).height(48.dp),
-                                            enabled = !isLoading
-                                        ) {
-                                            if (isLoading) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(24.dp),
-                                                    color = MaterialTheme.colorScheme.onPrimary
-                                                )
-                                            } else {
-                                                Text(stringResource(R.string.onboarding_finish))
-                                            }
-                                        }
-                                    }
-                                }
-                                3 -> {
-                                    // Nawigacja dla ekranu dodatkowych kierunków
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        FilledTonalButton(
-                                            onClick = { viewModel.onBackClick() },
-                                            modifier = Modifier.weight(1f).height(48.dp)
-                                        ) {
-                                            Icon(painterResource(R.drawable.ic_chevron_left), null, Modifier.size(20.dp))
-                                            Spacer(Modifier.width(8.dp))
-                                            Text(stringResource(R.string.onboarding_back))
-                                        }
-                                        Button(
-                                            onClick = { viewModel.onAdditionalCoursesNextClick() },
-                                            modifier = Modifier.weight(1f).height(48.dp),
-                                            enabled = !isLoading
-                                        ) {
-                                            Text(stringResource(R.string.onboarding_next))
-                                            Spacer(Modifier.width(8.dp))
-                                            Icon(painterResource(R.drawable.ic_chevron_right), null, Modifier.size(20.dp))
-                                        }
-                                    }
-                                }
-                                else -> {
-                                    val isNextEnabled = when(currentPage) {
-                                        1 -> selectedGender != null && userName.isNotBlank()
-                                        2 -> !selectedGroup.isNullOrBlank()
-                                        else -> true
-                                    }
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        FilledTonalButton(
-                                            onClick = { viewModel.onBackClick() },
-                                            modifier = Modifier.weight(1f).height(48.dp)
-                                        ) {
-                                            Icon(painterResource(R.drawable.ic_chevron_left), null, Modifier.size(20.dp))
-                                            Spacer(Modifier.width(8.dp))
-                                            Text(stringResource(R.string.onboarding_back))
-                                        }
-                                        Button(
-                                            onClick = { viewModel.onNextClick() },
-                                            modifier = Modifier.weight(1f).height(48.dp),
-                                            enabled = isNextEnabled
-                                        ) {
-                                            Text(stringResource(R.string.onboarding_next))
-                                            Spacer(Modifier.width(8.dp))
-                                            Icon(painterResource(R.drawable.ic_chevron_right), null, Modifier.size(20.dp))
+                                        if (isLoading) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp),
+                                                color = MaterialTheme.colorScheme.onPrimary
+                                            )
+                                        } else {
+                                            Text(stringResource(R.string.onboarding_finish))
                                         }
                                     }
                                 }
                             }
+                            3 -> {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    FilledTonalButton(
+                                        onClick = { viewModel.onBackClick() },
+                                        modifier = Modifier.weight(1f).height(48.dp)
+                                    ) {
+                                        Icon(painterResource(R.drawable.ic_chevron_left), null, Modifier.size(20.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(stringResource(R.string.onboarding_back))
+                                    }
+                                    Button(
+                                        onClick = { viewModel.onAdditionalCoursesNextClick() },
+                                        modifier = Modifier.weight(1f).height(48.dp),
+                                        enabled = !isLoading
+                                    ) {
+                                        Text(stringResource(R.string.onboarding_next))
+                                        Spacer(Modifier.width(8.dp))
+                                        Icon(painterResource(R.drawable.ic_chevron_right), null, Modifier.size(20.dp))
+                                    }
+                                }
+                            }
+                            else -> {
+                                val isNextEnabled = when(currentPage) {
+                                    1 -> selectedGender != null && userName.isNotBlank()
+                                    2 -> !selectedGroup.isNullOrBlank()
+                                    else -> true
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    FilledTonalButton(
+                                        onClick = { viewModel.onBackClick() },
+                                        modifier = Modifier.weight(1f).height(48.dp)
+                                    ) {
+                                        Icon(painterResource(R.drawable.ic_chevron_left), null, Modifier.size(20.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(stringResource(R.string.onboarding_back))
+                                    }
+                                    Button(
+                                        onClick = { viewModel.onNextClick() },
+                                        modifier = Modifier.weight(1f).height(48.dp),
+                                        enabled = isNextEnabled
+                                    ) {
+                                        Text(stringResource(R.string.onboarding_next))
+                                        Spacer(Modifier.width(8.dp))
+                                        Icon(painterResource(R.drawable.ic_chevron_right), null, Modifier.size(20.dp))
+                                    }
+                                }
+                            }
                         }
-                        Spacer(Modifier.height(16.dp))
-                        FooterText()
                     }
+                    Spacer(Modifier.height(12.dp))
+                    FooterText()
                 }
             }
         ) { innerPadding ->
@@ -249,6 +227,7 @@ fun LandingScreen(
                     .padding(horizontal = 24.dp),
                 contentAlignment = Alignment.Center
             ) {
+                // Animacja przejścia między slajdami
                 AnimatedContent(
                     targetState = currentPage,
                     transitionSpec = {
@@ -266,6 +245,7 @@ fun LandingScreen(
                 ) { page ->
                     var accumulatedDragX by remember(page) { mutableFloatStateOf(0f) }
 
+                    // Obsługa przesuwania palcem (swipe)
                     Box(
                         modifier = Modifier.pointerInput(
                             page,
@@ -284,7 +264,7 @@ fun LandingScreen(
                                 onDragEnd = {
                                     if (abs(accumulatedDragX) < threshold) return@detectHorizontalDragGestures
 
-                                    // Swipe w lewo = kolejny krok, swipe w prawo = poprzedni krok.
+                                    // W lewo -> dalej, w prawo -> wstecz
                                     if (accumulatedDragX < 0f) {
                                         when (page) {
                                             1 -> if (selectedGender != null && userName.isNotBlank()) viewModel.onNextClick()
@@ -317,8 +297,7 @@ fun LandingScreen(
     }
 }
 
-// --- DODATKOWY KROK: DODATKOWE KIERUNKI ---
-
+// Krok 4: wybór dodatkowych grup/kierunków
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AdditionalCoursesStepContent(viewModel: OnboardingViewModel) {
@@ -464,12 +443,8 @@ fun AdditionalCoursesStepContent(viewModel: OnboardingViewModel) {
     }
 }
 
-// --- EKRANY ZAWARTOŚCI ---
-
+// Krok 1: ekran powitalny
 @Composable
-        /**
-         * Renderuje krok powitalny z opisem możliwości aplikacji.
-         */
 fun WelcomeStepContent() {
     ResponsiveOnboardingStep(illustrationResId = R.drawable.college_students_rafiki) {
         OnboardingTexts(
@@ -480,12 +455,8 @@ fun WelcomeStepContent() {
     }
 }
 
+// Krok 2: imię, nazwisko i płeć
 @OptIn(ExperimentalMaterial3Api::class)
-/**
- * Renderuje krok personalizacji użytkownika (forma zwrotu oraz dane osobowe).
- *
- * @param viewModel ViewModel onboardingu.
- */
 @Composable
 fun PersonalizationStepContent(viewModel: OnboardingViewModel) {
     val selectedGender by viewModel.selectedGender.collectAsState()
@@ -593,12 +564,8 @@ fun PersonalizationStepContent(viewModel: OnboardingViewModel) {
     }
 }
 
+// Krok 3: wybór grupy głównej
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
-/**
- * Renderuje krok wyboru grupy oraz podgrup planu zajęć.
- *
- * @param viewModel ViewModel onboardingu.
- */
 @Composable
 fun GroupSelectionStepContent(viewModel: OnboardingViewModel) {
     val searchQuery by viewModel.groupSearchQuery.collectAsState()
@@ -711,10 +678,8 @@ fun GroupSelectionStepContent(viewModel: OnboardingViewModel) {
     }
 }
 
+// Krok 5: info o kalendarzu
 @Composable
-        /**
-         * Renderuje krok informacyjny dotyczący modułu kalendarza.
-         */
 fun CalendarFeatureStepContent() {
     InfoStepContent(
         pageIndex = 3,
@@ -724,10 +689,8 @@ fun CalendarFeatureStepContent() {
     )
 }
 
+// Krok 6: info o ocenach
 @Composable
-        /**
-         * Renderuje krok informacyjny dotyczący modułu ocen.
-         */
 fun GradesFeatureStepContent() {
     InfoStepContent(
         pageIndex = 4,
@@ -737,10 +700,8 @@ fun GradesFeatureStepContent() {
     )
 }
 
+// Krok 7: podsumowanie
 @Composable
-        /**
-         * Renderuje końcowy krok onboardingowy.
-         */
 fun FinalStepContent() {
     InfoStepContent(
         pageIndex = 5,
@@ -750,15 +711,8 @@ fun FinalStepContent() {
     )
 }
 
+// Pomocniczy widok dla prostych kroków informacyjnych
 @Composable
-        /**
-         * Renderuje generyczny krok informacyjny onboardingowy.
-         *
-         * @param pageIndex Indeks kroku używany do doboru ilustracji.
-         * @param title Tytuł kroku.
-         * @param subtitle Podtytuł kroku.
-         * @param description Opis kroku.
-         */
 fun InfoStepContent(pageIndex: Int, title: String, subtitle: String, description: String) {
     val resId = when(pageIndex) {
         3 -> R.drawable.calendar_rafiki
@@ -771,15 +725,8 @@ fun InfoStepContent(pageIndex: Int, title: String, subtitle: String, description
     }
 }
 
-// --- WSPÓLNE HELPERY ---
-
+// Szablon każdego kroku ze scrollem i obrazkiem
 @Composable
-        /**
-         * Wspólny kontener kroku onboardingowego z ilustracją i treścią.
-         *
-         * @param illustrationResId Id zasobu ilustracji kroku.
-         * @param content Slot zawartości kroku.
-         */
 fun ResponsiveOnboardingStep(
     illustrationResId: Int,
     content: @Composable ColumnScope.() -> Unit
@@ -787,22 +734,22 @@ fun ResponsiveOnboardingStep(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f, fill = false)
-                .heightIn(min = 200.dp, max = 350.dp)
-                .padding(vertical = 32.dp),
+                .heightIn(min = 160.dp, max = 260.dp)
+                .padding(vertical = 16.dp),
             contentAlignment = Alignment.Center
         ) {
             Image(
                 painter = painterResource(id = illustrationResId),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxHeight()
             )
         }
 
@@ -818,14 +765,8 @@ fun ResponsiveOnboardingStep(
     }
 }
 
+// Teksty nagłówkowe dla kroku
 @Composable
-        /**
-         * Renderuje zestaw tekstów opisujących dany krok onboardingu.
-         *
-         * @param title Tytuł kroku.
-         * @param subtitle Podtytuł kroku.
-         * @param description Opis kroku.
-         */
 fun OnboardingTexts(title: String, subtitle: String, description: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -854,13 +795,8 @@ fun OnboardingTexts(title: String, subtitle: String, description: String) {
     }
 }
 
+// Kropki pokazujące aktualny slajd
 @Composable
-        /**
-         * Renderuje wskaźniki aktualnej pozycji w procesie onboardingu.
-         *
-         * @param totalPages Liczba wszystkich kroków.
-         * @param currentPage Aktualny krok.
-         */
 fun PageIndicators(totalPages: Int, currentPage: Int) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         repeat(totalPages) { index ->
@@ -879,10 +815,8 @@ fun PageIndicators(totalPages: Int, currentPage: Int) {
     }
 }
 
+// Stopka na dole ekranu
 @Composable
-        /**
-         * Renderuje stopkę informacyjną ekranu onboardingu.
-         */
 fun FooterText() {
     Text(
         text = stringResource(R.string.onboarding_footer),

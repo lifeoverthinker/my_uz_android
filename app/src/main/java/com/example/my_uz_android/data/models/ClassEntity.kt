@@ -4,16 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
-/**
- * Encja bazodanowa reprezentująca pojedyncze zajęcia w planie studenta.
- *
- * Klasa stanowi główne źródło prawdy (Single Source of Truth) o harmonogramie w lokalnej
- * bazie danych SQLite oraz umożliwia synchronizację z zewnętrznym backendem dzięki serializacji.
- * Niejawnie pełni funkcję nadrzędną dla encji ocen i zadań, wykorzystując do mapowania
- * nazwę przedmiotu ([subjectName]) oraz typ zajęć ([classType]).
- * * Uwaga architektoniczna: Należy dbać o spójność wielkości liter oraz białych znaków
- * w polu [subjectName], aby zachować integralność logicznych relacji z ocenami i zadaniami.
- */
+// Pojedyncze zajęcia w planie
 @Serializable
 @Entity(tableName = "classes")
 data class ClassEntity(
@@ -34,4 +25,3 @@ data class ClassEntity(
     val room: String? = null,
     val colorHex: String? = "#3D84FF"
 )
-

@@ -1,11 +1,5 @@
 package com.example.my_uz_android.ui.screens.index
 
-/**
- * Ekran formularza służący do dodawania nowej lub edycji istniejącej nieobecności.
- * Integruje się z ViewModelem, aby zarządzać polami tekstowymi, datą, rodzajem zajęć
- * oraz statusem "Usprawiedliwiona".
- */
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -35,15 +29,7 @@ import java.util.Date
 import java.util.Locale
 import androidx.compose.ui.res.stringResource
 
-/**
- * Główny punkt wejścia do formularza dodawania/edycji nieobecności.
- * Mapuje dane z ViewModelu na parametry interfejsu użytkownika.
- *
- * @param viewModel ViewModel obsługujący stan formularza.
- * @param prefilledSubject Wstępnie uzupełniona nazwa przedmiotu (jeśli użytkownik dodał nieobecność z kalendarza).
- * @param prefilledClassType Wstępnie uzupełniony rodzaj zajęć.
- * @param onNavigateBack Funkcja wywoływana po udanym zapisie lub anulowaniu.
- */
+// Obsługa stanu i logiki dodawania/edycji nieobecności
 @Composable
 fun AbsenceAddEditScreenRoute(
     viewModel: AddEditAbsenceViewModel,
@@ -104,9 +90,7 @@ fun AbsenceAddEditScreenRoute(
     )
 }
 
-/**
- * Zwraca ujednolicone kolory dla pól tekstowych używanych w formularzach.
- */
+// Kolory ramek pól tekstowych w formularzu
 @Composable
 private fun absenceOutlinedTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -120,10 +104,7 @@ private fun absenceOutlinedTextFieldColors() = OutlinedTextFieldDefaults.colors(
 
 private val AbsenceAppShape = RoundedCornerShape(16.dp)
 
-/**
- * Pomocniczy komponent tworzący klikalny wiersz przypominający pole tekstowe.
- * Idealne do wywoływania DatePickera.
- */
+// Klikalny wiersz wyboru (np. data)
 @Composable
 private fun AbsenceClickableFieldRow(
     label: String,
@@ -178,9 +159,7 @@ private fun AbsenceClickableFieldRow(
     }
 }
 
-/**
- * Główny, bezstanowy (Stateless) widok formularza nieobecności.
- */
+// Widok formularza nieobecności
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AbsenceAddEditScreen(
@@ -350,9 +329,7 @@ fun AbsenceAddEditScreen(
     }
 }
 
-/**
- * Rozwijane menu wyboru przedmiotu (Dropdown).
- */
+// Menu rozwijane wyboru przedmiotu
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AbsenceAppDropdownMenu(

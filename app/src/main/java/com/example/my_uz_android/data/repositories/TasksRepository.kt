@@ -9,8 +9,8 @@ import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlin.random.Random
 
+// Repozytorium zadań studenta + obsługa chmury Supabase do dzielenia się listą zadań
 class TasksRepository(
     private val tasksDao: TasksDao,
     private val supabase: SupabaseClient
@@ -21,7 +21,6 @@ class TasksRepository(
 
     suspend fun insertTask(task: TaskEntity) = tasksDao.insert(task)
 
-    // Mostek dla masowego wstawiania używanego w SettingsViewModel i imporcie
     suspend fun insertTasks(tasks: List<TaskEntity>) {
         tasksDao.insertAll(tasks)
     }
@@ -32,7 +31,7 @@ class TasksRepository(
 
     suspend fun deleteAllTasks() = tasksDao.deleteAll()
 
-    // --- Udostępnianie ---
+    // Udostępnianie listy zadań kodem 6-znakowym
     suspend fun shareTasks(tasks: List<TaskEntity>): NetworkResult<String> {
         return try {
             val payloadJson = Json.encodeToString(tasks)
@@ -48,11 +47,11 @@ class TasksRepository(
         }
     }
 
-    // --- Importowanie ---
+    // Pobieranie i import zadań ze wspólnego kodu
     suspend fun importTasks(code: String): NetworkResult<List<TaskEntity>> {
         return try {
             val result = supabase.postgrest["shared_tasks"]
-                .select { filter { eq("share_id", code) } }
+                .select { filter { eq("share_id", code.trim().uppercase()) } }
                 .decodeSingleOrNull<SharedTaskRequest>()
 
             if (result != null) {
@@ -61,10 +60,10 @@ class TasksRepository(
                 tasksDao.insertAll(tasksToInsert)
                 NetworkResult.Success(tasksToInsert)
             } else {
-                NetworkResult.Error("Nie znaleziono kodu: $code")
+                NetworkResult.Error("Nie znaleziono zadań dla podanego kodu: $code")
             }
         } catch (e: Exception) {
-            NetworkResult.Error("Błąd importu: ${e.localizedMessage}")
+            NetworkResult.Error("Błąd importu zadań: ${e.localizedMessage}")
         }
     }
 }

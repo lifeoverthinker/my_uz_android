@@ -5,17 +5,14 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
+// Zapisane do ulubionych (sala, prowadzący, grupa)
 @Serializable
 @Entity(tableName = "favorites")
 data class FavoriteEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-
     val name: String,
-
     val type: String,
-
-    // ✅ FIX: Jawnie przypisujemy nazwę kolumny, o którą pyta DAO
     @ColumnInfo(name = "resource_id")
     val resourceId: String
 )

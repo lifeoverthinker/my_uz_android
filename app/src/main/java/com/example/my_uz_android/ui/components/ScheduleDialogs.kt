@@ -22,9 +22,7 @@ import com.example.my_uz_android.util.ClassTypeUtils
 import androidx.compose.ui.res.stringResource
 import com.example.my_uz_android.R
 
-/**
- * Okno dialogowe pokazujące informacje kontaktowe wykładowcy.
- */
+// Okienko ze szczegółami i mailem wykładowcy (z opcją skopiowania)
 @Composable
 fun TeacherInfoDialog(
     onDismiss: () -> Unit,
@@ -140,9 +138,7 @@ private fun TeacherEmailField(
     }
 }
 
-/**
- * Okno dialogowe pozwalające na wybór/odznaczenie pojedynczych podgrup w planie "SchedulePreview".
- */
+// Dialog wyboru podgrup w podglądzie planu
 @Composable
 fun SubgroupFilterDialog(
     subgroups: List<String>,
@@ -193,10 +189,7 @@ fun SubgroupFilterDialog(
     )
 }
 
-/**
- * Okno dialogowe filtrowania głównego planu zajęć.
- * Zoptymalizowane - brak niepotrzebnych, podwójnych teł Surface.
- */
+// Dialog filtrowania planu (grupy, podgrupy, typy zajęć)
 @Composable
 fun FilterDialog(
     groups: List<String>,

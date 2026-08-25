@@ -34,16 +34,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * Komponent wyświetlający zadanie (Task) ze statusem ukończenia i terminem.
- * Budowa i paddingi identyczne jak w EventCard.
- *
- * @param task Dane zadania do wyświetlenia.
- * @param onTaskClick Akcja wykonywana po kliknięciu karty.
- * @param modifier Modyfikator układu Compose.
- * @param backgroundColor Opcjonalny kolor tła karty.
- * @param isDarkMode Flaga określająca użycie kolorów trybu ciemnego.
- */
+// Karta zadania z kropką priorytetu i datą terminu
 @Composable
 fun TaskCard(
     task: TaskEntity,

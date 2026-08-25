@@ -42,25 +42,13 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
-/**
- * Definiuje warianty wizualne komponentu karty zajęć.
- * * Pozwala na ponowne wykorzystanie tego samego komponentu bazowego w różnych
- * kontekstach architektonicznych interfejsu (np. pełny widok na Ekranie Głównym
- * vs. minimalistyczny znacznik w Kalendarzu).
- */
+// Warianty karty zajęć: pełna na głównym ekranie lub kompaktowa w kalendarzu
 enum class ClassCardType {
     HOME,
     CALENDAR
 }
 
-/**
- * Kompozywalny (Composable) element interfejsu reprezentujący kartę pojedynczych zajęć.
- *
- * Realizuje założenia zasady DRY (Don't Repeat Yourself), dostarczając zunifikowany
- * i reużywalny komponent wizualny dla całej aplikacji. Automatycznie zarządza swoją
- * prezentacją na podstawie przekazanego stanu (np. wygaszanie zajęć, które już się odbyły),
- * jednak pozostaje komponentem w pełni bezstanowym (stateless) z perspektywy logiki biznesowej.
- */
+// Karta pojedynczych zajęć w planie (poszarza się automatycznie, jeśli zajęcia już minęły)
 @Composable
 fun ClassCard(
     classItem: ClassEntity,

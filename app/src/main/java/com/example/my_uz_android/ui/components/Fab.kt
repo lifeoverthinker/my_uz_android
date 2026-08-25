@@ -40,27 +40,14 @@ import com.example.my_uz_android.ui.screens.home.HomeViewModel
 import com.example.my_uz_android.ui.theme.InterFontFamily
 import androidx.compose.ui.res.stringResource
 
-/**
- * Model pojedynczej akcji wyświetlanej w rozwijanym menu FAB.
- *
- * @param label Etykieta akcji widoczna w menu.
- * @param iconRes Id zasobu ikony akcji.
- * @param onClick Callback wykonywany po wyborze akcji.
- */
+// Pojedyncza opcja w menu FAB
 data class FabAction(
     val label: String,
     val iconRes: Int,
     val onClick: () -> Unit
 )
 
-/**
- * Renderuje rozwijany FAB z akcjami dodawania ocen, nieobecności i zadań.
- *
- * @param onAddGrade Akcja uruchamiana dla dodawania oceny.
- * @param onAddAbsence Akcja uruchamiana dla dodawania nieobecności.
- * @param onAddTask Akcja uruchamiana dla dodawania zadania.
- * @param homeViewModel ViewModel ekranu głównego przekazywany przez fabrykę.
- */
+// Pływający przycisk '+' z rozwijanym menu (dodaj ocenę, nieobecność, zadanie)
 @Composable
 fun Fab(
     onAddGrade: () -> Unit,

@@ -99,31 +99,25 @@ class ClassRepository(private val classDao: ClassDao) {
         try { classDao.update(classEntity) } catch (e: Exception) { }
     }
 
+    // Pobiera nadchodzące zajęcia (dzisiejsze trwające/późniejsze oraz z kolejnych dni)
     fun getUpcomingClasses(limit: Int = Int.MAX_VALUE): Flow<List<ClassEntity>> {
         return getAllClassesStream().map { classes ->
             val now = LocalDateTime.now()
             val today = now.toLocalDate()
 
             classes
-                .filter { classItem ->
+                .mapNotNull { classItem ->
                     try {
                         val classDate = LocalDate.parse(classItem.date)
-                        when {
-                            classDate.isBefore(today) -> false
-                            classDate.isEqual(today) -> {
-                                val endTime = LocalTime.parse(classItem.endTime)
-                                LocalDateTime.of(today, endTime).isAfter(now)
-                            }
-                            else -> true
-                        }
-                    } catch (e: Exception) {
-                        false
+                        val endTime = LocalTime.parse(classItem.endTime)
+                        val endDateTime = LocalDateTime.of(classDate, endTime)
+                        if (endDateTime.isAfter(now)) classItem to endDateTime else null
+                    } catch (_: Exception) {
+                        null
                     }
                 }
-                .sortedWith(
-                    compareBy<ClassEntity> { it.date }
-                        .thenBy { it.startTime }
-                )
+                .sortedBy { it.second }
+                .map { it.first }
                 .take(limit)
         }
     }

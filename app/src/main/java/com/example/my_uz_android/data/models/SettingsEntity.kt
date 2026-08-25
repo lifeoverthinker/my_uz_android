@@ -11,6 +11,7 @@ enum class ThemeMode(val displayName: String) {
     SYSTEM("Systemowy")
 }
 
+// Główne ustawienia profilu i aplikacji (pojedynczy rekord o stałym id = 1)
 @Serializable
 @Entity(tableName = "settings")
 data class SettingsEntity(
@@ -44,7 +45,5 @@ data class SettingsEntity(
     val autoSyncEnabled: Boolean = true,
     val syncIntervalHours: Int = 24,
 
-    // Przechowywanie wybranego języka aplikacji (`pl` lub `en`).
-    // Domyślnie ustawiamy `pl`; starsze wartości legacy są normalizowane w warstwie UI.
     val appLanguage: String = "pl"
 )

@@ -177,12 +177,7 @@ fun CalendarEmptyState(
     )
 }
 
-/**
- * Wyświetla preset Empty State dla sekcji zadań.
- *
- * @param iconRes Id zasobu ilustracji.
- * @param modifier Modyfikator układu Compose.
- */
+// Pusty stan dla listy zadań
 @Composable
 fun TasksEmptyState(
     iconRes: Int,
@@ -199,12 +194,7 @@ fun TasksEmptyState(
     )
 }
 
-/**
- * Wyświetla preset Empty State dla sekcji nieobecności.
- *
- * @param iconRes Id zasobu ilustracji.
- * @param modifier Modyfikator układu Compose.
- */
+// Pusty stan dla listy nieobecności
 @Composable
 fun AbsencesEmptyState(
     iconRes: Int,
@@ -221,9 +211,7 @@ fun AbsencesEmptyState(
     )
 }
 
-/**
- * DASHBOARD EMPTY CARD — zostaje, ale porządkujemy typografię pod M3 + Inter.
- */
+// Mały kafelek na dashboardzie informujący o braku danych
 @Composable
 fun DashboardEmptyCard(
     title: String,
@@ -287,18 +275,7 @@ fun DashboardEmptyCard(
     }
 }
 
-/**
- * Renderuje kartę dashboardową Empty State z dodatkowym przyciskiem akcji.
- *
- * @param title Tytuł karty.
- * @param message Treść informacyjna.
- * @param iconRes Id zasobu ikony.
- * @param actionText Tekst przycisku akcji.
- * @param onActionClick Callback kliknięcia przycisku akcji.
- * @param containerColor Kolor tła karty.
- * @param accentColor Kolor akcentu dla ikony i nagłówka.
- * @param modifier Modyfikator układu Compose.
- */
+// Kafelek pustego stanu na dashboardzie z przyciskiem akcji
 @Composable
 fun DashboardActionEmptyCard(
     title: String,

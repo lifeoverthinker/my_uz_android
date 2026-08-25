@@ -8,6 +8,7 @@ import androidx.room.Query
 import com.example.my_uz_android.data.models.AbsenceEntity
 import kotlinx.coroutines.flow.Flow
 
+// Operacje na nieobecnościach
 @Dao
 interface AbsenceDao {
     @Query("SELECT * FROM absences ORDER BY date DESC")

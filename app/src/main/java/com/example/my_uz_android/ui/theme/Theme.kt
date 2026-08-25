@@ -1,11 +1,5 @@
 package com.example.my_uz_android.ui.theme
 
-/**
- * Konfiguracja motywu aplikacji opartego o Material 3.
- * Plik łączy bazowe schematy kolorów z dodatkowymi kolorami rozszerzonymi,
- * które są wykorzystywane przez dedykowane komponenty interfejsu.
- */
-
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -21,10 +15,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
+// Dodatkowe kolory aplikacji, których nie ma w standardowym ColorScheme Materiala
 @Immutable
-/**
- * Zestaw dodatkowych kolorów wykorzystywanych poza standardowym ColorScheme.
- */
 data class ExtendedColors(
     val classCardBackground: Color,
     val eventCardBackground: Color,
@@ -38,7 +30,7 @@ data class ExtendedColors(
 )
 
 val LocalExtendedColors = staticCompositionLocalOf<ExtendedColors> {
-    error("No ExtendedColors provided")
+    error("Brak dostarczonych ExtendedColors!")
 }
 
 private fun lightScheme() = lightColorScheme(
@@ -103,13 +95,8 @@ private fun darkScheme() = darkColorScheme(
     surfaceContainerHighest = md_theme_dark_surfaceContainerHighest
 )
 
+// Główny motyw aplikacji
 @Composable
-/**
- * Główna funkcja motywu aplikacji udostępniająca ColorScheme i ExtendedColors.
- *
- * @param darkTheme Flaga trybu ciemnego.
- * @param content Zawartość renderowana w kontekście motywu.
- */
 fun MyUZTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
@@ -141,6 +128,7 @@ fun MyUZTheme(
     val colorScheme = if (darkTheme) darkScheme() else lightScheme()
     val view = LocalView.current
 
+    // Ustawienie koloru paska stanu i nawigacji systemowej
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as? Activity)?.window ?: return@SideEffect
@@ -162,9 +150,7 @@ fun MyUZTheme(
     }
 }
 
-/**
- * Skrót dostępu do rozszerzonych kolorów motywu w bieżącej kompozycji.
- */
+// Pomocniczy getter, żeby łatwiej pisać np. extendedColors.navBackground
 val extendedColors: ExtendedColors
     @Composable
     get() = LocalExtendedColors.current

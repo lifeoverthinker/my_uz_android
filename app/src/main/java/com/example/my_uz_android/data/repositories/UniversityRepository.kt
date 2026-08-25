@@ -1,5 +1,6 @@
 package com.example.my_uz_android.data.repositories
 
+
 import android.content.Context
 import android.util.Log
 import com.example.my_uz_android.data.models.ClassEntity
@@ -16,7 +17,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-
 // =========================================================================
 // MODELE DTO (Data Transfer Objects)
 // =========================================================================
@@ -257,7 +257,7 @@ class UniversityRepository(
         }
     }
 
-    /** Wyszukuje wykładowców wykorzystując elastyczne mapowanie wielu słów z użyciem OR oraz dodaje empty states. */
+    // Wyszukiwanie wykładowców po imieniu/nazwisku
     suspend fun searchTeachers(query: String): NetworkResult<List<TeacherDetailsDto>> {
         return try {
             val searchTerms = query.trim().split("\\s+".toRegex()).filter { it.isNotBlank() }

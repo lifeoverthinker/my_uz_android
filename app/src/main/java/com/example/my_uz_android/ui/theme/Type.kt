@@ -1,11 +1,5 @@
 package com.example.my_uz_android.ui.theme
 
-/**
- * Definicje typografii aplikacji bazujące na rodzinie czcionek Inter.
- * Plik centralizuje style tekstowe Material 3 i zapewnia ich spójne
- * wykorzystanie w całym interfejsie.
- */
-
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -15,9 +9,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.my_uz_android.R
 
-/**
- * Pełna rodzina czcionek Inter używana w aplikacji.
- */
+// Czcionka Inter w różnych grubościach
 val InterFontFamily = FontFamily(
     Font(R.font.inter_thin, FontWeight.Thin),
     Font(R.font.inter_extralight, FontWeight.ExtraLight),
@@ -31,9 +23,7 @@ val InterFontFamily = FontFamily(
     Font(R.font.inter_italic, FontWeight.Normal, FontStyle.Italic)
 )
 
-/**
- * Konfiguracja typografii Material 3 z rodziną Inter.
- */
+// Typografia Material 3 podpięta pod czcionkę Inter
 val AppTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = InterFontFamily,

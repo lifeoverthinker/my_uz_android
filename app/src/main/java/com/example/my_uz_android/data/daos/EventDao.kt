@@ -4,6 +4,7 @@ import androidx.room.*
 import com.example.my_uz_android.data.models.EventEntity
 import kotlinx.coroutines.flow.Flow
 
+// Operacje na wydarzeniach i kalendarzu
 @Dao
 interface EventDao {
 
